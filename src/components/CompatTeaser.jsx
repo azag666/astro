@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import { ArrowRightIcon, HeartIcon, LockClosedIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { computeChart, SIGN_ELEMENT, SIGN_GLYPHS, SIGN_KEYS } from '../lib/astro'
 import { useI18n } from '../i18n'
-import { guessGender } from '../lib/gender'
 
 const ELEMENT_ORDER = ['fire', 'earth', 'air', 'water']
 const pairKey = (a, b) => [a, b].sort((x, y) => ELEMENT_ORDER.indexOf(x) - ELEMENT_ORDER.indexOf(y)).join('_')
@@ -12,9 +11,8 @@ const pairKey = (a, b) => [a, b].sort((x, y) => ELEMENT_ORDER.indexOf(x) - ELEME
 // Sem parceiro cadastrado, mostra o teaser travado que leva a adicionar o perfil dele.
 export default function CompatTeaser({ chart, partner, onAdd, onView, onBuyFor, onBuy }) {
   const { t: tBase } = useI18n()
-  // Texto do parceiro no gênero dele(a): palpite pelo nome; sem parceiro, forma neutra
-  const pg = partner ? guessGender(partner.name) : null
-  const g = tBase(`compat.g.${pg || 'n'}`)
+  // O parceiro fica sempre no neutro (dele(a)): não dá para supor com quem a pessoa se relaciona
+  const g = tBase('compat.g.n')
   const t = (k, vars) => tBase(k, { ...(typeof g === 'object' ? g : {}), ...vars })
   const signName = (i) => t(`signs.${SIGN_KEYS[i]}.name`)
   const venus = chart.get('venus')

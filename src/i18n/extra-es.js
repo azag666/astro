@@ -161,7 +161,7 @@ export default {
     steps: [
       { title: 'Astronomía de precisión', text: 'Calculamos la posición de cada planeta en el minuto exacto de tu nacimiento, con precisión de observatorio.' },
       { title: 'Tu punto exacto en la Tierra', text: 'Coordenadas y huso horario histórico de tu ciudad, incluido el horario de verano de la época.' },
-      { title: 'Cruce triple', text: 'Astrología, numerología y la lectura de tu mano combinadas en un solo diagnóstico.' },
+      { title: 'Astrología y numerología juntas', text: 'Tu carta y tus números cruzados en un solo diagnóstico, con foco en tu amor y en con quién combinas.' },
       { title: 'Interpretación humana', text: 'Astrólogos convierten los cálculos en orientaciones prácticas, en lenguaje sencillo.' },
     ],
   },

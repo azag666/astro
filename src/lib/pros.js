@@ -60,7 +60,8 @@ export function useEspecialistas() {
 
 // Especialista que combina com a dor do quiz (amor, dinheiro, carreira, espiritual); sem par, a primeira
 const PALAVRAS = {
-  amor: ['amor', 'relac', 'sinastr', 'taró', 'tarot', 'tarô'],
+  // Amor e compatibilidade pedem astróloga (sinastria) antes da taróloga
+  amor: ['sinastr', 'astról', 'astrol', 'astó', 'amor', 'relac', 'taró', 'tarot', 'tarô'],
   dinheiro: ['dinheiro', 'dinero', 'carreira', 'trabajo', 'numer'],
   carreira: ['carreira', 'trabajo', 'dinheiro', 'dinero', 'numer'],
   espiritual: ['astró', 'astro', 'espirit', 'holíst', 'holist'],
@@ -68,5 +69,10 @@ const PALAVRAS = {
 export function especialistaDaDor(pros, focus) {
   const chaves = PALAVRAS[focus] || []
   const texto = (p) => [p.role, ...(p.tags || [])].join(' ').toLowerCase()
-  return pros.find((p) => chaves.some((k) => texto(p).includes(k))) || pros[0] || null
+  // A ordem das palavras é a prioridade: a 1ª palavra que bate com alguém escolhe a especialista
+  for (const k of chaves) {
+    const achou = pros.find((p) => texto(p).includes(k))
+    if (achou) return achou
+  }
+  return pros[0] || null
 }

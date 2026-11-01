@@ -138,11 +138,13 @@ export default function App() {
     history.pushState(null, '', '#/offer')
   }, [screen, offer])
 
+  // Gênero pelo nome; sem palpite, a forma neutra o(a): não dá para supor
   return (
-    <I18nProvider country={country} gender={data.gender || 'f'}>
+    <I18nProvider country={country} gender={data.gender || 'n'}>
       <Starfield />
       <AnimatePresence mode="wait">
-        <motion.main key={screen} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
+        {/* overflow-x-clip (não hidden: não quebra o header sticky): o que entra de lado (x: 30) dava scroll horizontal no celular */}
+        <motion.main key={screen} className="overflow-x-clip" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
           {screen === 'intro' && (
             <Intro focus={URL_FOCUS || data.focus} onStart={() => go('quiz')} onSkip={toOffer} onCountry={setCountry} onLogin={() => (account ? toOffer() : go('login'))} />
           )}
@@ -207,7 +209,7 @@ export default function App() {
           )}
           {screen === 'success' && (
             <PosCompra data={data} order={order} profiles={account?.profiles || []}>
-              <Success data={data} order={order || { total: COUNTRIES[country].price }} />
+              <Success data={data} order={order || { total: COUNTRIES[country].price }} onArea={toOffer} />
             </PosCompra>
           )}
           {screen === 'volta' && (

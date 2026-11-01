@@ -25,6 +25,7 @@ import { isEmail, maskCard, maskExpiry, maskPhone } from '../lib/format'
 import { useI18n, WALLETS } from '../i18n'
 import { htMethod } from '../i18n/paises.js'
 import { sid, track, utm } from '../lib/track'
+import { currentAccount } from '../lib/account'
 import { fbCookies, fbEvent } from '../lib/pixel'
 import QRCode from 'qrcode'
 import { DateSelect, TimeSelect } from './DateSelect'
@@ -64,6 +65,8 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
   const [numBump, setNumBump] = useState(false)
   const [askBump, setAskBump] = useState(false)
   const pro = especialistaDaDor(useEspecialistas(), data.focus)
+  // Bump 'compatibilidade de vocês': se o parceiro já foi adicionado (ou é o mapa dele que está sendo comprado), os dados vão junto no pedido
+  const partner = buyFor?.relation === 'partner' ? buyFor : [...(currentAccount()?.profiles || [])].reverse().find((x) => x.relation === 'partner') || null
   const [touched, setTouched] = useState(false)
   const [order, setOrder] = useState(() => savedOrder(country))
   const [stage, setStage] = useState(() => (order ? 'pending' : 'form'))
@@ -133,6 +136,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
             focus: data.focus,
             utm,
             customer: { name: askHolder ? holder.trim() : data.name.trim(), email: data.email.trim(), phone: `${c.phone.code} ${data.phone}` },
+            partner: bump && partner ? perfilDoPedido(partner) : undefined,
             profile: buyFor && {
               id: buyFor.id,
               name: buyFor.name,
@@ -203,7 +207,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
             holder={holder}
             onPaid={() => {
               sessionStorage.removeItem(ORDER_KEY)
-              onPaid({ total: order.total, bump: order.bump, numBump: order.numBump, askBump: !!order.askBump, orderId: order.id, profileId: order.profileId || null })
+              onPaid({ total: order.total, bump: order.bump, numBump: order.numBump, askBump: !!order.askBump, orderId: order.id, profileId: order.profileId || null, partnerSent: !!(order.bump && partner) })
             }}
             onBack={() => {
               sessionStorage.removeItem(ORDER_KEY)
@@ -377,19 +381,12 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
                 </AnimatePresence>
               </Card>
 
+              {/* Ordem pensada para a oferta de amor: compatibilidade, pergunta à especialista, numerologia */}
               <Bump
                 checked={bump}
                 onChange={(v) => {
                   setBump(v)
                   track('bump_toggle', { item: 'bump', on: v })
-                }}
-              />
-              <Bump
-                k="numBump"
-                checked={numBump}
-                onChange={(v) => {
-                  setNumBump(v)
-                  track('bump_toggle', { item: 'numBump', on: v })
                 }}
               />
               {live && (
@@ -403,6 +400,14 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
                   }}
                 />
               )}
+              <Bump
+                k="numBump"
+                checked={numBump}
+                onChange={(v) => {
+                  setNumBump(v)
+                  track('bump_toggle', { item: 'numBump', on: v })
+                }}
+              />
 
               {payError && (
                 <p className="flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
@@ -910,4 +915,16 @@ function FakeQR({ seed }) {
       ))}
     </div>
   )
+}
+
+function perfilDoPedido(x) {
+  return {
+    id: x.id,
+    name: x.name,
+    relation: x.relation,
+    birthDate: x.birthDate,
+    birthTime: x.birthTime,
+    unknownTime: x.unknownTime,
+    place: x.place && { name: x.place.name, lat: x.place.lat, lon: x.place.lon, tz: x.place.tz },
+  }
 }

@@ -30,7 +30,7 @@ export default {
     tabs: { report: '解读', golden: '黄金日', numbers: '数字', path: '道路', offer: '我的套餐' },
     ordersTitle: '你的订单',
     orderStatus: '已发送到你的邮箱',
-    items: { main: '完整星盘解读', bump: '太阳返照', numBump: '完整灵数解读' },
+    items: { main: '完整星盘解读', bump: '你们的合盘', numBump: '完整灵数解读' },
   },
   report: {
     numerology: {

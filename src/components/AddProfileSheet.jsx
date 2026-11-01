@@ -5,16 +5,20 @@ import CitySearch from './CitySearch'
 import { DateSelect, TimeSelect } from './DateSelect'
 import { useI18n } from '../i18n'
 import { guessGender } from '../lib/gender'
+import { capitalPlace } from '../lib/astro'
 
 // Oferta focada em amor: a pessoa adicionada é sempre o(a) parceiro(a), e o gênero sai do nome (sem perguntar)
 const EMPTY = { name: '', relation: 'partner', gender: '', birthDate: '', birthTime: '', unknownTime: false, place: null }
 
 // Bottom sheet (mobile-first) para cadastrar o perfil de outra pessoa.
 export default function AddProfileSheet({ open, onClose, onSave }) {
-  const { t } = useI18n()
+  const { t, country } = useI18n()
   const [p, setP] = useState(EMPTY)
+  // Cidade digitada sem tocar na lista: como no quiz, usa a 1ª sugestão ou, sem nenhuma, a capital do país (não trava o botão)
+  const [pending, setPending] = useState({ query: '', first: null })
   const set = (patch) => setP((x) => ({ ...x, ...patch }))
-  const valid = p.name.trim().length > 1 && p.birthDate && (p.birthTime || p.unknownTime) && p.place
+  const place = p.place || pending.first || (pending.query.trim().length >= 2 ? capitalPlace(country, pending.query) : null)
+  const valid = p.name.trim().length > 1 && p.birthDate && (p.birthTime || p.unknownTime) && place
 
   return (
     <AnimatePresence>
@@ -25,8 +29,9 @@ export default function AddProfileSheet({ open, onClose, onSave }) {
             onSubmit={(e) => {
               e.preventDefault()
               if (!valid) return
-              onSave({ ...p, gender: guessGender(p.name) || 'n' })
+              onSave({ ...p, place, gender: guessGender(p.name) || 'n' })
               setP(EMPTY)
+              setPending({ query: '', first: null })
             }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -67,7 +72,7 @@ export default function AddProfileSheet({ open, onClose, onSave }) {
               </div>
               <div>
                 <Label>{t('profiles.sheet.city')}</Label>
-                <CitySearch place={p.place} onSelect={(place) => set({ place })} autoFocus={false} />
+                <CitySearch place={p.place} onSelect={(place) => set({ place })} onPending={setPending} autoFocus={false} />
               </div>
             </div>
 

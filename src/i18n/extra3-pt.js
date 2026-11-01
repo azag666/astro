@@ -6,7 +6,7 @@ export default {
     born: 'Nasceu em {date}',
     at: 'às {time}',
     unknownTime: 'hora não informada',
-    readOnly: 'Dados calculados a partir do nascimento. Para corrigir, fale com o suporte.',
+    readOnly: 'Dados calculados a partir do nascimento.',
     add: 'Adicionar perfil',
     addHint: 'Veja o céu de quem você ama',
     headlineOther: 'O céu de {name}, calculado agora.',
@@ -78,7 +78,7 @@ export default {
     locked: 'Descubra a compatibilidade de vocês',
     lockedRows: ['Química entre vocês (Vênus × Marte)', 'Do que {ele} precisa para se sentir {amado}', 'O que o mapa {dele} revela sobre você'],
     add: 'Adicionar o perfil {dele}',
-    addHint: 'Só data, hora e cidade. O céu {dele} é calculado na hora e fica salvo na sua área.',
+    addHint: 'Só nome, data, hora e cidade. O céu {dele} é calculado na hora e fica salvo na sua área.',
     pairLead: 'Sua Vênus em {venus} e o Marte de {partner} em {mars}',
     pairs: {
       fire_fire: 'Fogo com Fogo: atração rápida e intensa. O desafio é não transformar paixão em disputa.',

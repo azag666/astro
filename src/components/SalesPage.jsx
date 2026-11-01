@@ -36,7 +36,8 @@ import CompatTeaser from './CompatTeaser'
 import { addProfile, currentAccount } from '../lib/account'
 import { ZodiacWheel } from './Sky'
 import { computeChart } from '../lib/astro'
-import { useI18n } from '../i18n'
+import { I18nProvider, useI18n } from '../i18n'
+import { guessGender } from '../lib/gender'
 import ProsShowcase from './pros/ProsShowcase'
 import Reviews from './Reviews'
 
@@ -51,7 +52,7 @@ const CHAPTER_ICONS = [LightBulbIcon, ScaleIcon, ArrowPathRoundedSquareIcon, Aca
 
 
 export default function SalesPage({ data, account, onBuy, onCountry, onLogout }) {
-  const { t, money, c } = useI18n()
+  const { t, money, c, country } = useI18n()
   const { scrollY } = useScroll()
   const [scrolled, setScrolled] = useState(false)
   useMotionValueEvent(scrollY, 'change', (v) => setScrolled(v > 500))
@@ -67,6 +68,8 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
   const isMain = active.id === 'main'
   // O perfil ativo herda foco e contato do comprador; mão só existe no perfil principal
   const view = isMain ? data : { ...data, ...active, palm: null, focus: active.relation === 'partner' ? 'amor' : data.focus }
+  // Mapa de outro perfil: o texto segue o gênero de quem é dono dele (palpite pelo nome; sem palpite, a forma neutra "o(a)")
+  const viewGender = isMain ? null : guessGender(active.name) || (['f', 'm'].includes(active.gender) ? active.gender : 'n')
 
   const chart = useMemo(
     () => (view.birthDate ? computeChart({ birthDate: view.birthDate, birthTime: view.birthTime, unknownTime: view.unknownTime, place: view.place }) : null),
@@ -131,6 +134,7 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
         </section>
       )}
       {chart ? (
+        <ComGenero country={country} gender={viewGender}>
         <FreeReport
           key={active.id}
           data={view}
@@ -140,6 +144,7 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
           onBuy={buy}
           compat={compat}
         />
+        </ComGenero>
       ) : (
         <GenericHero onBuy={buy} />
       )}
@@ -660,14 +665,10 @@ function Footer() {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
           <Logo />
-          <div className="flex gap-6 text-sm text-white/45">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-white/45">
             <a href="#/avaliacoes" className="hover:text-white">{t('reviews.title')}</a>
-            <a href="#/especialista" className="hover:text-white">{t('showcase.eyebrow')}</a>
-            {t('sales.footer.links').map((l) => (
-              <a key={l} href="#" className="hover:text-white">
-                {l}
-              </a>
-            ))}
+            {/* "Especialistas" leva à área das especialistas (#/pros), não ao cadastro de novas especialistas */}
+            <a href="#/pros" className="hover:text-white">{t('showcase.eyebrow')}</a>
           </div>
         </div>
         <p className="mt-8 flex items-start gap-2 text-xs leading-relaxed text-white/35">
@@ -676,5 +677,15 @@ function Footer() {
         </p>
       </div>
     </footer>
+  )
+}
+
+function ComGenero({ country, gender, children }) {
+  return gender ? (
+    <I18nProvider country={country} gender={gender}>
+      {children}
+    </I18nProvider>
+  ) : (
+    children
   )
 }

@@ -68,7 +68,8 @@ export default function ProsArea({ data, profiles = [], initialPro = null }) {
   return (
     <div className="mx-auto max-w-xl px-5 py-8">
       <AnimatePresence mode="wait">
-        {view.name === 'list' && (
+        {/* Especialista não encontrada (ex.: id de persona e a lista real chegou depois): cai na lista em vez de tela em branco */}
+        {(view.name === 'list' || !pro) && (
           <motion.div key="list" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             {/* Da lista volta para a oferta/mapa: sem isso a pessoa ficava presa nas especialistas */}
             <BackButton

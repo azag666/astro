@@ -91,10 +91,10 @@ export default {
     upsell: {
       eyebrow: 'Oferta só desta tela',
       title: '{name}, você tem uma pergunta que o mapa sozinho não responde?',
-      text: 'Uma especialista lê o seu mapa e responde por escrito 3 perguntas suas: amor, dinheiro, uma decisão. Resposta em até 24 h, aqui na sua área.',
+      text: 'Uma especialista lê o seu mapa e responde por escrito 3 perguntas suas: o seu amor, a pessoa com quem você está, uma decisão. Resposta em até 24 h, aqui na sua área.',
       from: 'De {value}',
       cta: 'Quero minhas 3 respostas por {value}',
-      no: 'Não, obrigado(a)',
+      no: 'Não, obrigad{o|a}',
       downTitle: 'Espere: e só 1 pergunta?',
       downText: 'Faça a pergunta mais importante agora, com a mesma especialista, por um valor simbólico.',
       downCta: 'Quero 1 resposta por {value}',
@@ -200,7 +200,7 @@ export default {
     upsell: {
       eyebrow: 'Oferta solo de esta pantalla',
       title: '{name}, ¿tienes una pregunta que la carta sola no responde?',
-      text: 'Una especialista lee tu carta y responde por escrito 3 preguntas tuyas: amor, dinero, una decisión. Respuesta en menos de 24 h, aquí en tu área.',
+      text: 'Una especialista lee tu carta y responde por escrito 3 preguntas tuyas: tu amor, la persona con la que estás, una decisión. Respuesta en menos de 24 h, aquí en tu área.',
       from: 'Antes {value}',
       cta: 'Quiero mis 3 respuestas por {value}',
       no: 'No, gracias',
@@ -227,7 +227,7 @@ export default {
     },
     upsell: {
       title: '{name}, ¿tenés una pregunta que la carta sola no responde?',
-      text: 'Una especialista lee tu carta y responde por escrito 3 preguntas tuyas: amor, plata, una decisión. Respuesta en menos de 24 h, acá en tu área.',
+      text: 'Una especialista lee tu carta y responde por escrito 3 preguntas tuyas: tu amor, la persona con la que estás, una decisión. Respuesta en menos de 24 h, acá en tu área.',
       downText: 'Hacé la pregunta más importante ahora, con la misma especialista, por un valor simbólico.',
     },
     volta: {
@@ -325,7 +325,7 @@ export default {
     upsell: {
       eyebrow: '仅限本页优惠',
       title: '{name}，有星盘本身回答不了的问题吗？',
-      text: '专家解读你的星盘，书面回答你的 3 个问题：爱情、金钱或抉择。24 小时内回复。',
+      text: '专家解读你的星盘，书面回答你的 3 个问题：你的爱情、你身边的那个人，或一个抉择。24 小时内回复。',
       from: '原价 {value}',
       cta: '{value} 获取 3 个回答',
       no: '不用了，谢谢',

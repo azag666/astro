@@ -291,6 +291,8 @@ async function criarPedido(req, corpo) {
     focus: String(focus || '').slice(0, 20),
     utm: limparUtm(utm),
     profile: limparPerfil(corpo.profile),
+    // Bump 'compatibilidade de vocês': dados do parceiro (podem chegar depois, em /api/pedido/parceiro)
+    parceiro: bump ? limparPerfil(corpo.partner) : null,
     customer: { name: String(customer.name || '').slice(0, 120), email: String(customer.email || '').slice(0, 160), phone: String(customer.phone || '').slice(0, 30) },
     status: 'pending',
     createdAt: new Date().toISOString(),
@@ -456,7 +458,7 @@ function lerCorpo(req, limite = 16 * 1024) {
 }
 
 const META_EVENTOS = { view: 'PageView', quiz_start: 'ViewContent', signup: 'Lead', checkout_view: 'InitiateCheckout' }
-const EVENTOS = new Set(['view', 'quiz_start', 'quiz_step', 'signup', 'login', 'report_view', 'offer_view', 'buy_click', 'checkout_view', 'method_select', 'bump_toggle', 'pay_click', 'code_copy', 'redirect_open', 'paid_view', 'back_offer_view', 'back_offer_accept', 'upsell_accept', 'upsell_decline', 'pro_open', 'pack_select', 'review_open', 'offer_scroll', 'checkout_invalid'])
+const EVENTOS = new Set(['partner_sent', 'view', 'quiz_start', 'quiz_step', 'signup', 'login', 'report_view', 'offer_view', 'buy_click', 'checkout_view', 'method_select', 'bump_toggle', 'pay_click', 'code_copy', 'redirect_open', 'paid_view', 'back_offer_view', 'back_offer_accept', 'upsell_accept', 'upsell_decline', 'pro_open', 'pack_select', 'review_open', 'offer_scroll', 'checkout_invalid'])
 
 createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x')
@@ -515,6 +517,17 @@ createServer(async (req, res) => {
     if (url.pathname === '/api/pedido' && req.method === 'POST') {
       const [s, corpo] = await criarPedido(req, await lerCorpo(req))
       return json(res, s, corpo)
+    }
+
+    // Dados do parceiro para o bump de compatibilidade, enviados depois de pagar
+    if (url.pathname === '/api/pedido/parceiro' && req.method === 'POST') {
+      const b = await lerCorpo(req, 16 * 1024)
+      const p = pedidos.get(String(b.orderId || ''))
+      if (!p || !p.bump || p.sid !== String(b.sid || '')) return json(res, 403, { error: 'not_allowed' })
+      const parceiro = limparPerfil(b.partner)
+      if (!parceiro?.name || !parceiro.birthDate) return json(res, 400, { error: 'invalid_partner' })
+      salvarPedido({ ...p, parceiro })
+      return json(res, 200, { ok: true })
     }
 
     const m = url.pathname.match(/^\/api\/pedido\/([a-f0-9]{20})$/)

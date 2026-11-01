@@ -86,7 +86,7 @@ export default {
     sub: '¿Por qué siempre te atoras en el mismo punto? ¿Por qué atraes al mismo tipo de persona? Responde el test y descubre lo que revela tu carta astral, calculada con la posición real de los planetas.',
     cta: 'Empezar mi test',
     time: 'Toma 2 minutos',
-    free: 'Sin registro',
+    free: 'Gratis, sin tarjeta',
     skip: 'Ya sé lo que quiero, ver la carta completa',
   },
 
@@ -199,7 +199,7 @@ export default {
       endsIn: 'Los bonos de este mes desaparecen en',
       units: { d: 'días', h: 'horas', m: 'min', s: 'seg' },
       items: [
-        { title: 'Diagrama Energético de los próximos 12 meses', text: 'Una gráfica con las fases de alta y baja energía de tu próximo año.' },
+        { title: 'Calendario de Fechas de Oro', text: 'Tus días más favorables de cada mes del próximo año, marcados uno a uno.' },
         { title: 'Carta Numerológica Personal', text: 'Tu número de vida y lo que revela sobre tu misión.' },
       ],
       free: 'GRATIS',
@@ -228,7 +228,7 @@ export default {
     faq: { eyebrow: 'Dudas', title: 'Preguntas frecuentes' },
     footer: {
       links: ['Privacidad', 'Términos', 'Contacto'],
-      disclaimer: 'La carta astral es una herramienta de autoconocimiento basada en la posición de los astros en el momento de tu nacimiento. No sustituye la orientación profesional ni garantiza resultados financieros, amorosos ni de ninguna otra área.',
+      disclaimer: 'Tu carta y nuestras especialistas te ayudan a conocerte y a decidir con más claridad. La astrología no sustituye el acompañamiento médico, psicológico, jurídico ni financiero, y ninguna lectura garantiza resultados en el amor ni en otra área.',
     },
   },
 
@@ -253,8 +253,15 @@ export default {
 
   bump: {
     yes: 'Sí, quiero agregarla',
-    title: 'Revolución Solar de los próximos 12 meses',
-    text: 'Pronóstico mes a mes de tu nuevo ciclo: fases favorables, giros y el mejor momento para cada decisión.',
+    title: 'La compatibilidad de ustedes',
+    text: 'Tu carta cruzada con la de la persona que amas: la química, dónde se complementan, dónde chocan y lo que cada uno necesita del otro. Si aún no agregaste su perfil, envías sus datos después de pagar.',
+  },
+  partnerData: {
+    title: 'Envía sus datos',
+    text: 'Para calcular la compatibilidad de ustedes: nombre, fecha, hora y ciudad de nacimiento.',
+    cta: 'Enviar sus datos',
+    sent: 'Datos recibidos. La compatibilidad de ustedes llega a tu e-mail.',
+    error: 'No pudimos enviarlo ahora. Inténtalo de nuevo.',
   },
 
   checkout: {
@@ -276,7 +283,7 @@ export default {
     pages: 'Planetas, casas y aspectos',
     includes: ['Diagrama de los próximos 12 meses', 'Carta Numerológica Personal', 'Entrega inmediata'],
     lineMain: 'Carta Astral',
-    lineBump: 'Revolución Solar',
+    lineBump: 'Compatibilidad de ustedes',
     total: 'Total',
     guarantee: '¿No te gustó? Te devolvemos el 100% durante 7 días.',
     processing: 'Procesando',
@@ -307,12 +314,13 @@ export default {
 
   success: {
     title: '¡Gracias, {name}!',
-    sub: 'Tu cielo de nacimiento ya está en manos de nuestro equipo.',
+    sub: 'Tu carta ya está calculada y va camino a tu e-mail.',
     steps: [
       { title: 'Pago confirmado', text: 'Pedido de {total} aprobado.' },
-      { title: 'Tu carta se está preparando', text: 'Nuestros astrólogos ya recibieron tus datos de nacimiento.' },
-      { title: 'Entrega inmediata', text: 'En tu e-mail ({email}).' },
+      { title: 'Tu carta está lista', text: 'Calculada al instante, con tu fecha, hora y ciudad de nacimiento.' },
+      { title: 'Entrega inmediata', text: 'El PDF llega a tu e-mail ({email}) en instantes. Revisa también el spam.' },
     ],
     support: '¿Dudas? Habla con soporte',
+    toArea: 'Volver a mi carta',
   },
 }

@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion'
-import { CheckIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, SparklesIcon } from '@heroicons/react/24/outline'
+import { ArrowRightIcon, CheckIcon, EnvelopeIcon, SparklesIcon } from '@heroicons/react/24/outline'
 import Logo from './Logo'
 import { useI18n } from '../i18n'
 
-export default function Success({ data, order }) {
+export default function Success({ data, order, onArea }) {
   const { t, money } = useI18n()
   const icons = [CheckIcon, SparklesIcon, EnvelopeIcon]
   const vars = { total: money(order.total), email: data.email, name: (data.name || '').trim().split(/\s+/)[0] }
@@ -44,9 +44,10 @@ export default function Success({ data, order }) {
           )
         })}
       </ol>
-      <a href="#" className="mt-8 flex items-center gap-2 text-sm text-white/50 hover:text-white">
-        <ChatBubbleLeftRightIcon className="h-4 w-4" /> {t('success.support')}
-      </a>
+      {/* O antigo link de suporte (href="#") jogava a pessoa na Intro; sem canal de suporte definido, o caminho é a área */}
+      <button type="button" onClick={onArea} className="btn-gold mt-8 w-full">
+        {t('success.toArea')} <ArrowRightIcon className="h-5 w-5" />
+      </button>
     </div>
   )
 }

@@ -5,7 +5,7 @@ export default {
     born: '出生于{date}',
     at: '{time}',
     unknownTime: '出生时间未知',
-    readOnly: '以上数据根据出生信息计算。如需更正，请联系客服。',
+    readOnly: '以上数据根据出生信息计算。',
     add: '添加档案',
     addHint: '看看你爱的人的星盘',
     headlineOther: '{name}的星空，刚刚完成计算。',
@@ -76,7 +76,7 @@ export default {
     locked: '解锁你们的合盘',
     lockedRows: ['你们之间的化学反应（金星 × 火星）', '{dele}需要什么才会感到被爱', '{dele}的星盘透露了关于你的什么'],
     add: '添加{dele}的档案',
-    addHint: '只需日期、时间和城市。{dele}的星盘会立即算好，并保存在你的个人空间。',
+    addHint: '只需姓名、日期、时间和城市。{dele}的星盘会立即算好，并保存在你的个人空间。',
     pairLead: '你的金星在{venus}，{partner}的火星在{mars}',
     pairs: {
       fire_fire: '火遇火：吸引来得快又猛烈。挑战是别让激情变成较劲。',

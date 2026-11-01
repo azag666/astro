@@ -130,6 +130,11 @@ export default {
   },
 
   success: {
+    steps: [
+      { title: 'Pago confirmado', text: 'Pedido de {total} aprobado.' },
+      { title: 'Tu carta está lista', text: 'Calculada al instante, con tu fecha, hora y ciudad de nacimiento.' },
+      { title: 'Entrega inmediata', text: 'El PDF llega a tu e-mail ({email}) en instantes. Revisá también el spam.' },
+    ],
     support: '¿Dudas? Hablá con soporte',
   },
 }

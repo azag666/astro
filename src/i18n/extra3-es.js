@@ -5,7 +5,7 @@ export default {
     born: 'Nació el {date}',
     at: 'a las {time}',
     unknownTime: 'hora no indicada',
-    readOnly: 'Datos calculados a partir del nacimiento. Para corregirlos, escríbele a soporte.',
+    readOnly: 'Datos calculados a partir del nacimiento.',
     add: 'Agregar perfil',
     addHint: 'Mira el cielo de quien amas',
     headlineOther: 'El cielo de {name}, calculado ahora.',
@@ -58,7 +58,7 @@ export default {
     },
     loveQuestions: {
       title: 'Lo que responde tu carta completa',
-      items: ['Con quién combinas de verdad, y con quién solo sales herida', 'Por qué tu amor se traba siempre en el mismo punto', 'Los meses más favorables para que el amor llegue o vuelva', 'Lo que tu Casa 7 dice de la persona con la que estás'],
+      items: ['Con quién combinas de verdad, y con quién solo sales herid{o|a}', 'Por qué tu amor se traba siempre en el mismo punto', 'Los meses más favorables para que el amor llegue o vuelva', 'Lo que tu Casa 7 dice de la persona con la que estás'],
     },
     seenSubByFocus: { amor: 'El resto está en tu Carta Astral Completa: tu Venus, tu Marte y tu Casa 7 leídos por completo, con quién combinas y tus fechas del amor de los próximos 12 meses.' },
     urgency: { amor: 'Tu próxima fecha de oro para el amor es el {date}. Vale la pena leer tu carta completa antes.' },
@@ -76,7 +76,7 @@ export default {
     locked: 'Descubre la compatibilidad de ustedes',
     lockedRows: ['Química entre ustedes (Venus × Marte)', 'Lo que necesita para sentirse {amado}', 'Lo que su carta revela sobre ti'],
     add: 'Agregar su perfil',
-    addHint: 'Solo fecha, hora y ciudad. Su cielo se calcula al instante y queda guardado en tu área.',
+    addHint: 'Solo nombre, fecha, hora y ciudad. Su cielo se calcula al instante y queda guardado en tu área.',
     pairLead: 'Tu Venus en {venus} y el Marte de {partner} en {mars}',
     pairs: {
       fire_fire: 'Fuego con Fuego: atracción rápida e intensa. El desafío es no convertir la pasión en competencia.',

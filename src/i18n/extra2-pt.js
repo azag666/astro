@@ -30,7 +30,7 @@ export default {
     tabs: { report: 'Diagnóstico', golden: 'Datas de ouro', numbers: 'Números', path: 'Caminho', offer: 'Meu pacote' },
     ordersTitle: 'Seus pedidos',
     orderStatus: 'Enviado no seu e-mail',
-    items: { main: 'Mapa Astral Completo', bump: 'Revolução Solar', numBump: 'Mapa Numerológico Completo' },
+    items: { main: 'Mapa Astral Completo', bump: 'A compatibilidade de vocês', numBump: 'Mapa Numerológico Completo' },
   },
   report: {
     numerology: {

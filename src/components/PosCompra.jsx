@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useI18n } from '../i18n'
-import { track } from '../lib/track'
+import { sid, track } from '../lib/track'
+import { addProfile } from '../lib/account'
+import AddProfileSheet from './AddProfileSheet'
 import QuickPay from './pros/QuickPay'
 import { AskForm } from './pros/ProsArea'
 import ProAvatar from './pros/ProAvatar'
@@ -32,6 +34,7 @@ export default function PosCompra({ data, order = null, profiles = [], children 
       <>
         {children}
         <div className="mx-auto max-w-md px-5 pb-16">
+          {order?.bump && order.orderId && !order.partnerSent && <PartnerData orderId={order.orderId} />}
           <ReviewForm />
         </div>
       </>
@@ -101,5 +104,49 @@ export default function PosCompra({ data, order = null, profiles = [], children 
         )}
       </motion.div>
     </AnimatePresence>
+  )
+}
+
+// Quem levou o bump 'compatibilidade de vocês' sem ter adicionado o parceiro antes manda os dados aqui
+function PartnerData({ orderId }) {
+  const { t } = useI18n()
+  const [open, setOpen] = useState(false)
+  const [state, setState] = useState(() => (sessionStorage.getItem(`ceu-natal-parceiro-${orderId}`) ? 'sent' : 'idle'))
+
+  const save = async (partner) => {
+    setOpen(false)
+    setState('sending')
+    try {
+      const r = await fetch('/api/pedido/parceiro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, sid, partner }),
+      })
+      if (!r.ok) throw new Error(String(r.status))
+      addProfile(partner)
+      sessionStorage.setItem(`ceu-natal-parceiro-${orderId}`, '1')
+      track('partner_sent')
+      setState('sent')
+    } catch {
+      setState('error')
+    }
+  }
+
+  return (
+    <div className="glass mb-6 rounded-3xl p-5 text-center">
+      {state === 'sent' ? (
+        <p className="text-sm text-gold-300">{t('partnerData.sent')}</p>
+      ) : (
+        <>
+          <p className="font-serif text-xl font-semibold">{t('partnerData.title')}</p>
+          <p className="mt-1 text-sm text-white/60">{t('partnerData.text')}</p>
+          {state === 'error' && <p className="mt-2 text-xs text-rose-300">{t('partnerData.error')}</p>}
+          <button type="button" disabled={state === 'sending'} onClick={() => setOpen(true)} className="btn-gold mt-4 w-full">
+            {t('partnerData.cta')}
+          </button>
+        </>
+      )}
+      <AddProfileSheet open={open} onClose={() => setOpen(false)} onSave={save} />
+    </div>
   )
 }
