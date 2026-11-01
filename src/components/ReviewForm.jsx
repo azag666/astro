@@ -60,8 +60,8 @@ export default function ReviewForm({ pro = null, pros = null }) {
       </div>
       <input className="field" placeholder={t('reviews.name')} value={nome} maxLength={60} onChange={(e) => setNome(e.target.value)} autoComplete="given-name" />
       <textarea className="field resize-none" rows={3} placeholder={t('reviews.text')} value={texto} maxLength={1000} onChange={(e) => setTexto(e.target.value)} />
-      {estado === 'erro' && <p className="text-sm text-rose-300">{t('checkout.pay.error')}</p>}
-      {estado === 'limite' && <p className="text-sm text-rose-300">{t('checkout.pay.tooMany')}</p>}
+      {estado === 'erro' && <p className="text-sm text-rose-300">{t('reviews.error')}</p>}
+      {estado === 'limite' && <p className="text-sm text-rose-300">{t('reviews.tooMany')}</p>}
       <button disabled={!ok || estado === 'enviando'} className="btn-gold w-full disabled:opacity-50">{t('reviews.send')}</button>
     </form>
   )

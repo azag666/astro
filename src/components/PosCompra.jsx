@@ -9,10 +9,11 @@ import ReviewForm from './ReviewForm'
 
 // Pós-compra do mapa: upsell (3 perguntas com desconto) → se recusar, downsell (1 pergunta) →
 // depois de pagar, já abre o formulário das perguntas. Ao final (ou recusando tudo) mostra `children`.
-export default function PosCompra({ data, profiles = [], children }) {
+export default function PosCompra({ data, order = null, profiles = [], children }) {
   const { t, money, c } = useI18n()
   const [step, setStep] = useState(() => (sessionStorage.getItem('ceu-natal-poscompra') === 'fim' ? 'done' : 'up'))
-  const [paid, setPaid] = useState(null)
+  // Quem levou a pergunta no checkout (askBump) já escreve a pergunta e pula o upsell
+  const [paid, setPaid] = useState(() => (order?.askBump && order.orderId && sessionStorage.getItem('ceu-natal-poscompra') !== 'fim' ? { id: order.orderId, pack: 1 } : null))
   const [paying, setPaying] = useState(false)
   const pros = useEspecialistas()
   const pro = pros[0]

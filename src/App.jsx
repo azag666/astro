@@ -177,7 +177,7 @@ export default function App() {
             />
           )}
           {screen === 'success' && (
-            <PosCompra data={data} profiles={account?.profiles || []}>
+            <PosCompra data={data} order={order} profiles={account?.profiles || []}>
               <Success data={data} order={order || { total: COUNTRIES[country].price }} />
             </PosCompra>
           )}

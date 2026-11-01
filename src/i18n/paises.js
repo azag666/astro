@@ -81,7 +81,7 @@ export function htMethod(wallet, currency) {
 // offer 'up' = 3 perguntas no pós-compra, 'down' = 1 pergunta se recusar o upsell)
 export const PACKS = [1, 3, 5]
 
-export function orderTotal(country, { product = 'mapa', offer = '', bump = false, numBump = false, pack = 0 } = {}) {
+export function orderTotal(country, { product = 'mapa', offer = '', bump = false, numBump = false, askBump = false, pack = 0 } = {}) {
   const c = COUNTRIES[country]
   if (!c) return null
   let total
@@ -89,7 +89,7 @@ export function orderTotal(country, { product = 'mapa', offer = '', bump = false
     if (!PACKS.includes(pack)) return null
     total = offer === 'up' && pack === 3 ? c.askUp : offer === 'down' && pack === 1 ? c.askDown : c.ask[pack]
   } else {
-    total = (offer === 'back' ? c.back : c.price) + (bump ? c.bump : 0) + (numBump ? c.numBump : 0)
+    total = (offer === 'back' ? c.back : c.price) + (bump ? c.bump : 0) + (numBump ? c.numBump : 0) + (askBump ? c.askDown : 0)
   }
   return { total, cents: Math.round(total * 100), currency: c.currency }
 }

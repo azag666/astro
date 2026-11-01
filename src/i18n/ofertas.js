@@ -1,6 +1,12 @@
 // Textos da escada de ofertas: volta (back redirect), pós-compra (upsell/downsell) e profissionais
 export default {
   pt: {
+    askBump: {
+      yes: 'Sim, quero perguntar',
+      title: '1 pergunta para uma especialista',
+      text: 'Depois do pagamento, você escreve sua pergunta e uma especialista responde por escrito, usando o seu mapa, em até 24 h.',
+    },
+    checkout: { lineAskBump: 'Pergunta à especialista' },
     showcase: {
       eyebrow: 'Especialistas',
       title: 'Pergunte a quem entende do seu céu',
@@ -22,6 +28,8 @@ export default {
       whatsapp: 'WhatsApp (opcional)',
       consent: 'Autorizo publicar meu nome, foto, especialidades e bio no Céu Natal, e receber contato da equipe.',
       send: 'Enviar cadastro',
+      error: 'Não conseguimos enviar seu cadastro. Confira os campos e tente de novo.',
+      tooMany: 'Muitas tentativas seguidas. Tente de novo em alguns minutos.',
       doneTitle: 'Cadastro recebido!',
       doneText: 'Vamos revisar seu perfil. Assim que for aprovado, ele aparece para os clientes e entramos em contato.',
       roles: { astro: 'Astróloga', tarot: 'Taróloga', numero: 'Numeróloga', amor: 'Amor e relacionamentos', carreira: 'Carreira e dinheiro', holistica: 'Terapeuta holística', outra: 'Outra' },
@@ -37,6 +45,8 @@ export default {
       text: 'Conte como foi',
       send: 'Enviar avaliação',
       thanks: 'Obrigado! Sua avaliação vai aparecer aqui depois de revisada.',
+      error: 'Não conseguimos enviar sua avaliação. Tente de novo.',
+      tooMany: 'Muitas avaliações seguidas. Tente de novo mais tarde.',
       verified: 'Comprou',
     },
     pros: {
@@ -97,6 +107,12 @@ export default {
     },
   },
   es: {
+    askBump: {
+      yes: 'Sí, quiero preguntar',
+      title: '1 pregunta a una especialista',
+      text: 'Después del pago escribes tu pregunta y una especialista responde por escrito, usando tu carta, en menos de 24 h.',
+    },
+    checkout: { lineAskBump: 'Pregunta a la especialista' },
     showcase: {
       eyebrow: 'Especialistas',
       title: 'Pregúntale a quien entiende tu cielo',
@@ -118,6 +134,8 @@ export default {
       whatsapp: 'WhatsApp (opcional)',
       consent: 'Autorizo publicar mi nombre, foto, especialidades y bio en Céu Natal, y recibir contacto del equipo.',
       send: 'Enviar registro',
+      error: 'No pudimos enviar tu registro. Revisa los campos e inténtalo de nuevo.',
+      tooMany: 'Demasiados intentos seguidos. Inténtalo de nuevo en unos minutos.',
       doneTitle: '¡Registro recibido!',
       doneText: 'Vamos a revisar tu perfil. Cuando sea aprobado, aparecerá para los clientes y te contactaremos.',
       roles: { astro: 'Astróloga', tarot: 'Tarotista', numero: 'Numeróloga', amor: 'Amor y relaciones', carreira: 'Trabajo y dinero', holistica: 'Terapeuta holística', outra: 'Otra' },
@@ -133,6 +151,8 @@ export default {
       text: 'Cuéntanos cómo te fue',
       send: 'Enviar reseña',
       thanks: '¡Gracias! Tu reseña aparecerá aquí después de revisarla.',
+      error: 'No pudimos enviar tu reseña. Inténtalo de nuevo.',
+      tooMany: 'Demasiadas reseñas seguidas. Inténtalo más tarde.',
       verified: 'Compró',
     },
     pros: {
@@ -209,6 +229,12 @@ export default {
     },
   },
   zh: {
+    askBump: {
+      yes: '是的，我要提问',
+      title: '向专家提 1 个问题',
+      text: '付款后写下你的问题，专家会根据你的星盘在 24 小时内书面回复。',
+    },
+    checkout: { lineAskBump: '专家提问' },
     showcase: {
       eyebrow: '专家',
       title: '向懂你星空的人提问',
@@ -230,6 +256,8 @@ export default {
       whatsapp: 'WhatsApp（可选）',
       consent: '我同意在 Céu Natal 公开我的名字、照片、专长和简介，并接受团队联系。',
       send: '提交注册',
+      error: '注册提交失败，请检查后重试。',
+      tooMany: '尝试次数过多，请稍后再试。',
       doneTitle: '已收到注册！',
       doneText: '我们会审核你的资料，通过后会展示给客户并联系你。',
       roles: { astro: '占星师', tarot: '塔罗师', numero: '数字命理师', amor: '爱情与关系', carreira: '事业与财富', holistica: '身心疗愈师', outra: '其他' },
@@ -245,6 +273,8 @@ export default {
       text: '说说你的体验',
       send: '提交评价',
       thanks: '谢谢！审核后会显示在这里。',
+      error: '评价提交失败，请重试。',
+      tooMany: '提交过于频繁，请稍后再试。',
       verified: '已购买',
     },
     pros: {

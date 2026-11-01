@@ -59,6 +59,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
   const [method, setMethod] = useState(c.wallets[0])
   const [bump, setBump] = useState(false)
   const [numBump, setNumBump] = useState(false)
+  const [askBump, setAskBump] = useState(false)
   const [touched, setTouched] = useState(false)
   const [order, setOrder] = useState(() => savedOrder(country))
   const [stage, setStage] = useState(() => (order ? 'pending' : 'form'))
@@ -74,7 +75,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
   const kind = WALLETS[method].kind
 
   const base = offer === 'back' ? c.back : c.price
-  const total = base + (bump ? c.bump : 0) + (numBump ? c.numBump : 0)
+  const total = base + (bump ? c.bump : 0) + (numBump ? c.numBump : 0) + (askBump ? c.askDown : 0)
   const signIdx = quickSunSign(subject.birthDate)
   const phoneDigits = data.phone.replace(/\D/g, '')
   const contactOk = data.name.trim().length >= 2 && isEmail(data.email) && phoneDigits.length >= c.phone.min
@@ -120,6 +121,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
             offer,
             bump,
             numBump,
+            askBump,
             focus: data.focus,
             utm,
             customer: { name: askHolder ? holder.trim() : data.name.trim(), email: data.email.trim(), phone: `${c.phone.code} ${data.phone}` },
@@ -136,7 +138,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
         })
         const body = await r.json().catch(() => ({}))
         if (!r.ok) throw Object.assign(new Error(body.error), { code: body.error })
-        const o = { ...body, country, bump, numBump, profileId: buyFor?.id || null }
+        const o = { ...body, country, bump, numBump, askBump, profileId: buyFor?.id || null }
         sessionStorage.setItem(ORDER_KEY, JSON.stringify(o))
         const link = o.payment?.kind === 'redirect' && o.payment.instructions?.checkout_url
         if (link && !o.simulado) {
@@ -192,7 +194,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
             holder={holder}
             onPaid={() => {
               sessionStorage.removeItem(ORDER_KEY)
-              onPaid({ total: order.total, bump: order.bump, numBump: order.numBump, profileId: order.profileId || null })
+              onPaid({ total: order.total, bump: order.bump, numBump: order.numBump, askBump: !!order.askBump, orderId: order.id, profileId: order.profileId || null })
             }}
             onBack={() => {
               sessionStorage.removeItem(ORDER_KEY)
@@ -359,6 +361,16 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
                   track('bump_toggle', { item: 'numBump', on: v })
                 }}
               />
+              {live && (
+                <Bump
+                  k="askBump"
+                  checked={askBump}
+                  onChange={(v) => {
+                    setAskBump(v)
+                    track('bump_toggle', { item: 'askBump', on: v })
+                  }}
+                />
+              )}
 
               {payError && (
                 <p className="flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
@@ -416,6 +428,11 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
                     {numBump && (
                       <motion.div key="nb" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                         <Row label={t('checkout.lineNumBump')} value={money(c.numBump)} />
+                      </motion.div>
+                    )}
+                    {askBump && (
+                      <motion.div key="ab" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+                        <Row label={t('checkout.lineAskBump')} value={money(c.askDown)} />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -495,8 +512,8 @@ export function WalletTab({ id, active, onClick, color, label, note }) {
 
 function Bump({ k = 'bump', checked, onChange }) {
   const { t, money, c } = useI18n()
-  const price = k === 'bump' ? c.bump : c.numBump
-  const from = k === 'bump' ? c.bumpFrom : c.numBumpFrom
+  const price = k === 'bump' ? c.bump : k === 'askBump' ? c.askDown : c.numBump
+  const from = k === 'bump' ? c.bumpFrom : k === 'askBump' ? c.ask[1] : c.numBumpFrom
   return (
     <motion.label
       animate={checked ? { scale: [1, 1.02, 1] } : {}}

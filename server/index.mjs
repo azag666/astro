@@ -257,7 +257,8 @@ async function criarPedido(req, corpo) {
   const method = htMethod(wallet, c.currency)
   if (!method) return [400, { error: 'invalid_method' }]
   if (estaForaDoAr(wallet, c.currency)) return [422, { error: 'method_unavailable' }]
-  const valor = orderTotal(country, { product, offer, pack, bump: product === 'mapa' && !!bump, numBump: product === 'mapa' && !!numBump })
+  const askBump = product === 'mapa' && !!corpo.askBump
+  const valor = orderTotal(country, { product, offer, pack, askBump, bump: product === 'mapa' && !!bump, numBump: product === 'mapa' && !!numBump })
   if (!valor) return [400, { error: 'invalid_product' }]
 
   const aberto = [...pedidos.values()].find(
@@ -280,6 +281,7 @@ async function criarPedido(req, corpo) {
     total: valor.total,
     cents: valor.cents,
     bump: !!bump,
+    askBump,
     numBump: !!numBump,
     focus: String(focus || '').slice(0, 20),
     utm: limparUtm(utm),
@@ -334,7 +336,7 @@ function urlDeVolta(req, p) {
 }
 
 function publico(p) {
-  return { id: p.id, status: p.status, product: p.product || 'mapa', pack: p.pack || 0, offer: p.offer || '', wallet: p.wallet, total: p.total, currency: p.currency, payment: p.payment, expiresAt: p.expiresAt, simulado: SIMULADO }
+  return { id: p.id, status: p.status, product: p.product || 'mapa', pack: p.pack || 0, askBump: !!p.askBump, offer: p.offer || '', wallet: p.wallet, total: p.total, currency: p.currency, payment: p.payment, expiresAt: p.expiresAt, simulado: SIMULADO }
 }
 
 function limparUtm(u = {}) {
@@ -481,10 +483,11 @@ createServer(async (req, res) => {
     if (url.pathname === '/api/perguntas' && req.method === 'POST') {
       const b = await lerCorpo(req, 32 * 1024)
       const p = pedidos.get(String(b.orderId || ''))
-      if (!p || p.product !== 'perguntas' || p.status !== 'paid' || p.sid !== String(b.sid || '')) return json(res, 403, { error: 'not_allowed' })
+      if (!p || !(p.product === 'perguntas' || p.askBump) || p.status !== 'paid' || p.sid !== String(b.sid || '')) return json(res, 403, { error: 'not_allowed' })
+      const pack = p.product === 'perguntas' ? p.pack : 1
       const usadas = [...perguntas.values()].filter((q) => q.orderId === p.id).length
       const novas = (Array.isArray(b.questions) ? b.questions : []).map((x) => String(x || '').trim().slice(0, 1200)).filter(Boolean)
-      if (!novas.length || usadas + novas.length > p.pack) return json(res, 400, { error: 'too_many', restantes: p.pack - usadas })
+      if (!novas.length || usadas + novas.length > pack) return json(res, 400, { error: 'too_many', restantes: pack - usadas })
       for (const texto of novas) {
         salvarPergunta({
           id: randomUUID().replace(/-/g, '').slice(0, 16),
@@ -500,7 +503,7 @@ createServer(async (req, res) => {
         })
       }
       gravar(`eventos-${hoje()}.jsonl`, { t: Date.now(), sid: p.sid, ev: 'questions_sent', country: p.country, utm: p.utm, props: { n: novas.length, pro: String(b.proId || '').slice(0, 30) } })
-      return json(res, 200, { ok: true, restantes: p.pack - usadas - novas.length })
+      return json(res, 200, { ok: true, restantes: pack - usadas - novas.length })
     }
 
     if (url.pathname === '/api/perguntas' && req.method === 'GET') {
@@ -508,8 +511,11 @@ createServer(async (req, res) => {
       if (!sid) return json(res, 400, { error: 'sid' })
       const lista = [...perguntas.values()].filter((q) => q.sid === sid).map(({ id, orderId, proId, question, status, answer, answeredAt, createdAt, profile }) => ({ id, orderId, proId, question, status, answer, answeredAt, createdAt, profileName: profile?.name || null }))
       const creditos = [...pedidos.values()]
-        .filter((p) => p.sid === sid && p.product === 'perguntas' && p.status === 'paid')
-        .map((p) => ({ orderId: p.id, pack: p.pack, restantes: p.pack - lista.filter((q) => q.orderId === p.id).length }))
+        .filter((p) => p.sid === sid && (p.product === 'perguntas' || p.askBump) && p.status === 'paid')
+        .map((p) => {
+          const pack = p.product === 'perguntas' ? p.pack : 1
+          return { orderId: p.id, pack, restantes: pack - lista.filter((q) => q.orderId === p.id).length }
+        })
       return json(res, 200, { perguntas: lista, creditos })
     }
 
@@ -589,7 +595,7 @@ createServer(async (req, res) => {
 
     if (url.pathname.startsWith('/api/painel/') && req.method === 'POST') {
       if (!PAINEL_TOKEN || url.searchParams.get('k') !== PAINEL_TOKEN) return json(res, 404, { error: 'not_found' })
-      const b = await lerCorpo(req, 64 * 1024)
+      const b = await lerCorpo(req, 2 * 1024 * 1024)
       if (url.pathname === '/api/painel/avaliacao') {
         const a = avaliacoes.mapa.get(String(b.id || ''))
         if (!a || !['aprovada', 'recusada', 'pendente'].includes(b.status)) return json(res, 400, { error: 'invalid' })

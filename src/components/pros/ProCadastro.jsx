@@ -96,8 +96,8 @@ export default function ProCadastro({ onBack }) {
         <input type="checkbox" className="mt-1 h-4 w-4 accent-gold-400" checked={f.aceite} onChange={set('aceite')} />
         {t('proSignup.consent')}
       </label>
-      {estado === 'erro' && <p className="text-sm text-rose-300">{t('checkout.pay.error')}</p>}
-      {estado === 'limite' && <p className="text-sm text-rose-300">{t('checkout.pay.tooMany')}</p>}
+      {estado === 'erro' && <p className="text-sm text-rose-300">{t('proSignup.error')}</p>}
+      {estado === 'limite' && <p className="text-sm text-rose-300">{t('proSignup.tooMany')}</p>}
       <button disabled={!ok || estado === 'enviando'} className="btn-gold w-full py-5 text-lg disabled:opacity-50">{t('proSignup.send')}</button>
     </form>
   )
