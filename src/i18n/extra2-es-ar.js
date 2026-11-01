@@ -25,6 +25,6 @@ export default {
     },
   },
   numBump: {
-    text: 'Tus 9 números principales, deudas kármicas, pináculos, ciclos de vida y compatibilidad numerológica con quien amás.',
+    text: 'Va más allá de la carta personal de tu paquete: tus 9 números principales, deudas kármicas, pináculos, ciclos de vida y compatibilidad numerológica con quien amás.',
   },
 }

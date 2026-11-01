@@ -59,7 +59,7 @@ export default {
   numBump: {
     yes: 'Sí, quiero agregarla',
     title: 'Carta Numerológica Completa',
-    text: 'Tus 9 números principales, deudas kármicas, pináculos, ciclos de vida y compatibilidad numerológica con quien amas.',
+    text: 'Va más allá de la carta personal de tu paquete: tus 9 números principales, deudas kármicas, pináculos, ciclos de vida y compatibilidad numerológica con quien amas.',
   },
   checkout: { lineNumBump: 'Carta Numerológica' },
 }

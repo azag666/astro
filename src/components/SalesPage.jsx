@@ -175,7 +175,7 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
       <div id="pacote" className="scroll-mt-28">
         <Stack focus={focus} onBuy={buy} />
       </div>
-      <Bonuses />
+      <Bonuses focus={focus} />
       <HowItWorks quizDone={!!chart} />
       <ProsShowcase />
       <div className="mx-auto max-w-6xl px-5 pb-10">
@@ -361,22 +361,30 @@ function Engine() {
   )
 }
 
-// Valores de referência em BRL, convertidos pela âncora de preço de cada país
-const STACK_VALUES = [97, 67, 47, 47, 37]
-
-function Stack({ focus, onBuy }) {
-  const { t, tf, money, c } = useI18n()
-  const factor = c.from / 97.9
-  const nice = (v) => {
-    const x = v * factor
+// Peso de cada item do pacote; os valores somam exatamente o "de" do país (c.from), o mesmo preço riscado do resto da página
+const STACK_WEIGHTS = [97, 67, 47, 47, 37]
+function valoresDoPacote(c) {
+  const soma = STACK_WEIGHTS.reduce((a, b) => a + b, 0)
+  const nice = (w) => {
+    const x = (c.from * w) / soma
     if (c.decimals) return Math.round(x)
     const unit = 10 ** Math.max(0, String(Math.round(x)).length - 2)
     return Math.round(x / unit) * unit
   }
-  const values = STACK_VALUES.map(nice)
-  const total = values.reduce((a, b) => a + b, 0)
-  const focusShort = t(`focus.${focus}.short`)
-  const items = tf('stack.items', focus, { focus: focusShort, guide: t(`stack.guides.${focus}`) })
+  const resto = STACK_WEIGHTS.slice(1).map(nice)
+  return [Math.round((c.from - resto.reduce((a, b) => a + b, 0)) * 100) / 100, ...resto]
+}
+// Itens do pacote: os bônus e o cartão da oferta usam os mesmos nomes
+function useItensDoPacote(focus) {
+  const { t, tf } = useI18n()
+  return tf('stack.items', focus, { focus: t(`focus.${focus}.short`), guide: t(`stack.guides.${focus}`) })
+}
+
+function Stack({ focus, onBuy }) {
+  const { t, money, c } = useI18n()
+  const values = valoresDoPacote(c)
+  const total = c.from
+  const items = useItensDoPacote(focus)
   const icons = [DocumentTextIcon, CalendarDaysIcon, BookOpenIcon, StarIcon, HashtagIcon]
 
   return (
@@ -511,8 +519,11 @@ function ReportMockup() {
   )
 }
 
-function Bonuses() {
+function Bonuses({ focus }) {
   const { t, money, c, monthName } = useI18n()
+  // Os 2 últimos itens do pacote, com o mesmo nome e valor de lá
+  const values = valoresDoPacote(c).slice(3)
+  const itens = useItensDoPacote(focus).slice(3)
   const icons = [CalendarDaysIcon, HashtagIcon]
   return (
     <section className="mx-auto max-w-6xl px-5 py-24">
@@ -522,7 +533,7 @@ function Bonuses() {
         <Countdown />
       </motion.div>
       <div className="mt-12 grid gap-5 md:grid-cols-2">
-        {t('sales.bonus.items').map((b, i) => {
+        {itens.map((b, i) => {
           const Icon = icons[i]
           return (
             <motion.div
@@ -536,7 +547,7 @@ function Bonuses() {
               <h3 className="mt-5 font-serif text-2xl font-semibold">{b.title}</h3>
               <p className="mt-2 text-white/65">{b.text}</p>
               <p className="mt-5 text-sm">
-                <s className="text-white/40">{money(c.bonus[i])}</s>
+                <s className="text-white/40">{money(values[i])}</s>
                 <span className="ml-2 rounded-full bg-gold-400 px-3 py-1 text-xs font-bold text-night-950">{t('sales.bonus.free')}</span>
               </p>
             </motion.div>
@@ -586,6 +597,7 @@ function HowItWorks({ quizDone }) {
 function Offer({ focus, onBuy }) {
   const { t, tf, money, c } = useI18n()
   const extra = tf('sales.offer.extra', focus)
+  const itens = useItensDoPacote(focus).map((it) => it.title)
   return (
     <section id="oferta" className="mx-auto max-w-6xl px-5 py-24">
       <motion.div
@@ -598,7 +610,7 @@ function Offer({ focus, onBuy }) {
         <p className="relative text-xs font-semibold uppercase tracking-[0.25em] text-gold-300">{t('sales.offer.eyebrow')}</p>
         <h2 className="relative mt-3 font-serif text-4xl font-semibold">{t('sales.offer.title')}</h2>
         <ul className="relative mt-8 space-y-3">
-          {[...(Array.isArray(extra) ? extra : []), ...t('sales.offer.items')].map((it) => (
+          {[...(Array.isArray(extra) ? extra : []), ...itens, t('sales.offer.delivery')].map((it) => (
             <li key={it} className="flex items-start gap-3 text-white/80">
               <CheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-gold-400" />
               {it}

@@ -198,10 +198,6 @@ export default {
       title: 'Si haces tu pedido antes de fin de mes, también te llevas',
       endsIn: 'Los bonos de este mes desaparecen en',
       units: { d: 'días', h: 'horas', m: 'min', s: 'seg' },
-      items: [
-        { title: 'Calendario de Fechas de Oro', text: 'Tus días más favorables de cada mes del próximo año, marcados uno a uno.' },
-        { title: 'Carta Numerológica Personal', text: 'Tu número de vida y lo que revela sobre tu misión.' },
-      ],
       free: 'GRATIS',
     },
     how: {
@@ -218,7 +214,7 @@ export default {
     offer: {
       eyebrow: 'Oferta especial',
       title: 'Tu Carta Astral Completa',
-      items: ['Carta Astral completa', 'Interpretación de todos los planetas y las 12 casas', 'Diagrama Energético de los próximos 12 meses', 'Carta Numerológica Personal', 'Entrega inmediata por e-mail'],
+      delivery: 'Entrega inmediata por e-mail',
       off: '{n}% de descuento',
       once: 'Pago único.',
       cta: 'Quiero mi carta astral',

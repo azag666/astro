@@ -1,6 +1,7 @@
 // Textos da escada de ofertas: volta (back redirect), pós-compra (upsell/downsell) e profissionais
 export default {
   pt: {
+    meta: { title: 'Céu Natal — Seu Mapa Astral Completo' },
     askBump: {
       yes: 'Sim, quero perguntar',
       title: '1 pergunta para uma especialista',
@@ -110,6 +111,7 @@ export default {
     },
   },
   es: {
+    meta: { title: 'Céu Natal — Tu Carta Astral Completa' },
     askBump: {
       yes: 'Sí, quiero preguntar',
       title: '1 pregunta a una especialista',
@@ -235,6 +237,7 @@ export default {
     },
   },
   zh: {
+    meta: { title: 'Céu Natal — 你的完整星盘' },
     askBump: {
       yes: '是的，我要提问',
       title: '向专家提 1 个问题',

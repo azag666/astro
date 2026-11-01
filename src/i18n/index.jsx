@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from 'react'
+import { createContext, useContext, useEffect, useMemo } from 'react'
 import pt from './pt'
 import es from './es'
 import esAR from './es-ar'
@@ -121,6 +121,12 @@ export function I18nProvider({ country, gender, children }) {
       monthName: new Date().toLocaleDateString(c.locale, { month: 'long' }),
     }
   }, [country, gender])
+
+  // Título da aba no idioma da página
+  const titulo = value.t('meta.title')
+  useEffect(() => {
+    if (titulo !== 'meta.title') document.title = titulo
+  }, [titulo])
 
   return <I18n.Provider value={value}>{children}</I18n.Provider>
 }
