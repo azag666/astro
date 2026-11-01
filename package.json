@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "setup:mediapipe": "mkdir -p public/mediapipe && cp node_modules/@mediapipe/tasks-vision/wasm/* public/mediapipe/ && curl -sL -o public/mediapipe/hand_landmarker.task https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
     "server": "node --env-file-if-exists=.env server/index.mjs",
-    "start": "vite build && node --env-file-if-exists=.env server/index.mjs"
+    "start": "vite build && node --env-file-if-exists=.env server/index.mjs",
+    "chave": "node scripts/chave.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
