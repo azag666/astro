@@ -157,7 +157,7 @@ async function criarPedido(req, corpo) {
   const valor = orderTotal(country, { bump: !!bump, numBump: !!numBump })
 
   const aberto = [...pedidos.values()].find(
-    (p) => p.sid === sid && p.status === 'pending' && p.wallet === wallet && p.cents === valor.cents && p.currency === valor.currency && Date.now() - Date.parse(p.createdAt) < 30 * 60e3 && p.payment,
+    (p) => p.sid === sid && p.status === 'pending' && p.wallet === wallet && (p.profile?.id || null) === (corpo.profile?.id || null) && p.cents === valor.cents && p.currency === valor.currency && Date.now() - Date.parse(p.createdAt) < 30 * 60e3 && p.payment,
   )
   if (aberto) return [200, publico(aberto)]
 
@@ -176,6 +176,7 @@ async function criarPedido(req, corpo) {
     numBump: !!numBump,
     focus: String(focus || '').slice(0, 20),
     utm: limparUtm(utm),
+    profile: limparPerfil(corpo.profile),
     customer: { name: String(customer.name || '').slice(0, 120), email: String(customer.email || '').slice(0, 160), phone: String(customer.phone || '').slice(0, 30) },
     status: 'pending',
     createdAt: new Date().toISOString(),
@@ -225,6 +226,22 @@ function limparUtm(u = {}) {
     if (u[k]) out[k] = String(u[k]).slice(0, 200)
   }
   return out
+}
+
+// Perfil de outra pessoa para quem é o mapa (vai junto do pedido para a entrega)
+function limparPerfil(pf) {
+  if (!pf || typeof pf !== 'object') return null
+  const txt = (v, n) => String(v ?? '').slice(0, n)
+  const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : null)
+  return {
+    id: txt(pf.id, 40),
+    name: txt(pf.name, 120),
+    relation: txt(pf.relation, 20),
+    birthDate: /^\d{4}-\d{2}-\d{2}$/.test(pf.birthDate) ? pf.birthDate : '',
+    birthTime: /^\d{2}:\d{2}$/.test(pf.birthTime) ? pf.birthTime : '',
+    unknownTime: !!pf.unknownTime,
+    place: pf.place ? { name: txt(pf.place.name, 120), lat: num(pf.place.lat), lon: num(pf.place.lon), tz: txt(pf.place.tz, 60) } : null,
+  }
 }
 
 function limparProps(props) {

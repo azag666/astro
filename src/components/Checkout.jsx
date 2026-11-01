@@ -38,7 +38,8 @@ function savedOrder(country) {
   }
 }
 
-export default function Checkout({ data, setData, onBack, onPaid }) {
+// buyFor: perfil de outra pessoa (parceiro, filho...) para quem é o mapa; null = o próprio comprador
+export default function Checkout({ data, setData, onBack, onPaid, buyFor = null }) {
   const { t, money, c, country, walletName, walletNote } = useI18n()
   const [off, setOff] = useState([])
   const wallets = c.wallets.filter((w) => !off.includes(w))
@@ -55,11 +56,12 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
   const askHolder = live && method === 'cvu'
   const [bank, setBank] = useState('')
   const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '', installments: '1' })
-  const fromQuiz = !!data.birthDate && !!data.place
+  const subject = buyFor || data
+  const fromQuiz = !!subject.birthDate && !!subject.place
   const kind = WALLETS[method].kind
 
   const total = c.price + (bump ? c.bump : 0) + (numBump ? c.numBump : 0)
-  const signIdx = quickSunSign(data.birthDate)
+  const signIdx = quickSunSign(subject.birthDate)
   const phoneDigits = data.phone.replace(/\D/g, '')
   const contactOk = data.name.trim().length >= 2 && isEmail(data.email) && phoneDigits.length >= c.phone.min
   const showContact = !contactOk || editContact
@@ -69,8 +71,8 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
     if (data.name.trim().length < 2) e.name = t('checkout.errors.name')
     if (!isEmail(data.email)) e.email = t('checkout.errors.email')
     if (phoneDigits.length < c.phone.min) e.phone = t('checkout.errors.phone')
-    if (!data.birthDate) e.birthDate = t('checkout.errors.birthDate')
-    if (!data.place && !data.cityText?.trim()) e.city = t('checkout.errors.city')
+    if (!buyFor && !data.birthDate) e.birthDate = t('checkout.errors.birthDate')
+    if (!buyFor && !data.place && !data.cityText?.trim()) e.city = t('checkout.errors.city')
     if (kind === 'card') {
       if (card.number.replace(/\D/g, '').length < 16) e.number = t('checkout.errors.number')
       if (card.name.trim().length < 3) e.cardName = t('checkout.errors.cardName')
@@ -80,7 +82,7 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
     if (kind === 'redirect' && !live && !bank) e.bank = t('checkout.errors.bank')
     if (askHolder && holder.trim().split(/\s+/).length < 2) e.holder = t('checkout.pay.errors.holder')
     return e
-  }, [data, card, kind, bank, phoneDigits, c, t, live, askHolder, holder])
+  }, [data, card, kind, bank, phoneDigits, c, t, live, askHolder, holder, buyFor])
 
   const submit = async (ev) => {
     ev.preventDefault()
@@ -106,11 +108,20 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
             focus: data.focus,
             utm,
             customer: { name: askHolder ? holder.trim() : data.name.trim(), email: data.email.trim(), phone: `${c.phone.code} ${data.phone}` },
+            profile: buyFor && {
+              id: buyFor.id,
+              name: buyFor.name,
+              relation: buyFor.relation,
+              birthDate: buyFor.birthDate,
+              birthTime: buyFor.birthTime,
+              unknownTime: buyFor.unknownTime,
+              place: buyFor.place && { name: buyFor.place.name, lat: buyFor.place.lat, lon: buyFor.place.lon, tz: buyFor.place.tz },
+            },
           }),
         })
         const body = await r.json().catch(() => ({}))
         if (!r.ok) throw Object.assign(new Error(body.error), { code: body.error })
-        const o = { ...body, country, bump, numBump }
+        const o = { ...body, country, bump, numBump, profileId: buyFor?.id || null }
         sessionStorage.setItem(ORDER_KEY, JSON.stringify(o))
         const link = o.payment?.kind === 'redirect' && o.payment.instructions?.checkout_url
         if (link && !o.simulado) {
@@ -166,7 +177,7 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
             holder={holder}
             onPaid={() => {
               sessionStorage.removeItem(ORDER_KEY)
-              onPaid({ total: order.total, bump: order.bump, numBump: order.numBump })
+              onPaid({ total: order.total, bump: order.bump, numBump: order.numBump, profileId: order.profileId || null })
             }}
             onBack={() => {
               sessionStorage.removeItem(ORDER_KEY)
@@ -238,10 +249,11 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
               <Card step="2" title={t('checkout.step2')}>
                 {fromQuiz ? (
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl bg-white/[0.04] px-4 py-3.5 text-sm">
-                    <span className="flex items-center gap-2"><CalendarDaysIcon className="h-4 w-4 text-gold-400" />{new Date(data.birthDate + 'T12:00').toLocaleDateString(c.locale)}</span>
-                    <span className="flex items-center gap-2"><ClockIcon className="h-4 w-4 text-gold-400" />{data.unknownTime ? t('checkout.unknownTime') : data.birthTime}</span>
-                    <span className="flex items-center gap-2"><MapPinIcon className="h-4 w-4 text-gold-400" />{data.place.name}</span>
-                    <span className="ml-auto flex items-center gap-1 text-xs text-emerald-300/90"><CheckIcon className="h-4 w-4" /> {t('checkout.fromQuiz')}</span>
+                    {buyFor && <span className="flex items-center gap-2 font-medium"><UserIcon className="h-4 w-4 text-gold-400" />{buyFor.name}</span>}
+                    <span className="flex items-center gap-2"><CalendarDaysIcon className="h-4 w-4 text-gold-400" />{new Date(subject.birthDate + 'T12:00').toLocaleDateString(c.locale)}</span>
+                    <span className="flex items-center gap-2"><ClockIcon className="h-4 w-4 text-gold-400" />{subject.unknownTime || !subject.birthTime ? t('checkout.unknownTime') : subject.birthTime}</span>
+                    <span className="flex items-center gap-2"><MapPinIcon className="h-4 w-4 text-gold-400" />{subject.place.name}</span>
+                    {!buyFor && <span className="ml-auto flex items-center gap-1 text-xs text-emerald-300/90"><CheckIcon className="h-4 w-4" /> {t('checkout.fromQuiz')}</span>}
                   </div>
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-3">
@@ -360,7 +372,7 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
                     {signIdx != null ? SIGN_GLYPHS[signIdx] : '☉'}
                   </span>
                   <div>
-                    <p className="font-semibold">{t('checkout.product')}</p>
+                    <p className="font-semibold">{buyFor ? t('checkout.pay.productFor', { name: buyFor.name }) : t('checkout.product')}</p>
                     <p className="text-sm text-white/50">
                       {signIdx != null ? `${t(`signs.${SIGN_KEYS[signIdx]}.name`)} · ` : ''}
                       {t('checkout.pages')}
