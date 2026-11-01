@@ -86,9 +86,10 @@ export function jornadas(dir, pedidos, { de, ate } = {}) {
   }
 
   const agora = Date.now()
-  // Aparelhos de teste da equipe (sid começando com 'teste') ficam fora
+  // Aparelhos de teste da equipe ficam fora: sid começando com 'teste' ou listado em DATA/ignorar.txt
+  const ignorar = new Set(existsSync(join(dir, 'ignorar.txt')) ? readFileSync(join(dir, 'ignorar.txt'), 'utf8').split(/\s+/).filter(Boolean) : [])
   return [...por.values()]
-    .filter((x) => !x.sid.startsWith('teste'))
+    .filter((x) => !x.sid.startsWith('teste') && !ignorar.has(x.sid))
     .map((x) => {
       const c = contatos.get(x.sid) || {}
       const mapa = x.pedidos.filter((p) => (p.product || 'mapa') === 'mapa')
