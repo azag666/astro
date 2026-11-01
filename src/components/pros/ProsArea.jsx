@@ -13,6 +13,7 @@ import { useEspecialistas } from '../../lib/pros'
 // A resposta é escrita pela equipe no /painel, assinada pela especialista escolhida.
 
 export function ProAvatar({ pro, size = 'h-14 w-14 text-2xl' }) {
+  if (pro.foto) return <img src={pro.foto} alt={pro.name} className={`shrink-0 rounded-full object-cover ring-2 ring-gold-400/40 ${size}`} />
   return (
     <span className={`relative grid shrink-0 place-items-center rounded-full font-serif text-white ${size}`} style={{ background: `linear-gradient(135deg, ${pro.from}, ${pro.to})` }}>
       {pro.glyph}
@@ -44,7 +45,11 @@ export function packLabel(t, n) {
 // profiles: perfis da conta (parceiro, filhos...) para escolher sobre quem é a pergunta.
 export default function ProsArea({ data, profiles = [], initialPro = null }) {
   const { t, money, c } = useI18n()
-  const [view, setView] = useState(initialPro ? { name: 'packs', pro: initialPro } : { name: 'list' })
+  const [view, setView] = useState(() => {
+    const escolhida = initialPro || sessionStorage.getItem('ceu-natal-pro')
+    sessionStorage.removeItem('ceu-natal-pro')
+    return escolhida ? { name: 'packs', pro: escolhida } : { name: 'list' }
+  })
   const [mine, setMine] = useState({ perguntas: [], creditos: [] })
   const pros = useEspecialistas()
 

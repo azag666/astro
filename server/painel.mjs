@@ -131,15 +131,51 @@ function blocoAvaliacoes(lista, k, nomes) {
 }
 
 function blocoEspecialistas(lista, k) {
-  const form = (e = {}) => `<form class="card grade" onsubmit="event.preventDefault();${esc(postar(k, 'especialista', `{id:this.id.value||undefined,nome:this.nome.value,especialidade:this.esp.value,bio:this.bio.value,ordem:this.ordem.value}`))}">
+  const ordem = { pendente: 0, aprovada: 1, recusada: 2 }
+  const script = `<script>
+function lerFoto(input, cb) {
+  const f = input.files && input.files[0]
+  if (!f) return cb(undefined)
+  const img = new Image()
+  img.onload = () => {
+    const lado = Math.min(img.width, img.height), c = document.createElement('canvas')
+    c.width = c.height = 512
+    c.getContext('2d').drawImage(img, (img.width - lado) / 2, (img.height - lado) / 2, lado, lado, 0, 0, 512, 512)
+    cb(c.toDataURL('image/jpeg', 0.85))
+  }
+  img.src = URL.createObjectURL(f)
+}
+function salvarEsp(form) {
+  lerFoto(form.foto, (foto) => {
+    fetch('/api/painel/especialista?k=${k}', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: form.id.value || undefined, nome: form.nome.value, especialidade: form.esp.value, especialidades: form.tags.value, bio: form.bio.value, ordem: form.ordem.value, foto }) })
+      .then((r) => (r.ok ? location.reload() : r.json().then((e) => alert(e.error || 'erro'))))
+  })
+}
+</script>`
+  const form = (e = {}) => {
+    const tag = e.status === 'pendente' ? '<span class="tag">pendente</span>' : e.status === 'recusada' ? '<span class="tag no">recusada</span>' : e.id ? '<span class="tag ok">no ar</span>' : ''
+    const status = e.id
+      ? ['aprovada', 'recusada']
+          .filter((st) => st !== e.status)
+          .map((st) => `<button type="button" onclick="${esc(postar(k, 'especialista', `{id:'${e.id}',status:'${st}'}`))}">${st === 'aprovada' ? 'Aprovar' : 'Recusar'}</button>`)
+          .join('')
+      : ''
+    return `<form class="card grade" onsubmit="event.preventDefault();salvarEsp(this)">
+<div class="linha" style="align-items:center">${e.foto ? `<img src="${esc(e.foto)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover">` : ''}<b>${esc(e.nome || 'Nova especialista')}</b>${tag}${e.origem === 'cadastro' ? '<span class="tag v">cadastro pelo site</span>' : ''}</div>
+${e.email || e.whatsapp ? `<div class="sub">Contato: ${esc(e.email || '')} ${esc(e.whatsapp || '')} ${e.pais ? '· ' + esc(e.pais) : ''}</div>` : ''}
 <input type="hidden" name="id" value="${esc(e.id || '')}">
 <input class="l" name="nome" placeholder="Nome" value="${esc(e.nome || '')}" required>
-<input class="l" name="esp" placeholder="Especialidade (ex.: Astróloga, Taróloga, Amor e relacionamentos)" value="${esc(e.especialidade || '')}" required>
+<input class="l" name="esp" placeholder="Especialidade principal (ex.: Astróloga)" value="${esc(e.especialidade || '')}" required>
+<input class="l" name="tags" placeholder="Outras especialidades, separadas por vírgula (ex.: Tarô, Amor, Sinastria)" value="${esc((e.especialidades || []).join(', '))}">
 <textarea name="bio" rows="3" placeholder="Bio curta (aparece para o cliente)">${esc(e.bio || '')}</textarea>
-<div class="linha"><input name="ordem" type="number" placeholder="Ordem" value="${esc(e.ordem ?? '')}" style="width:90px"><button>${e.id ? 'Salvar' : 'Cadastrar especialista'}</button>${e.id ? `<button type="button" onclick="${esc(`if(confirm('Remover ${e.nome}?'))` + postar(k, 'especialista', `{id:'${e.id}',remover:true}`))}">Remover</button>` : ''}</div>
-${e.id ? `<div class="sub">${e.nota ? `★ ${e.nota} · ${e.avaliacoes} avaliação(ões) aprovada(s)` : 'Sem avaliações aprovadas ainda'}</div>` : ''}
+<label class="sub">Foto (quadrada, recortada sozinha): <input type="file" name="foto" accept="image/*"></label>
+<div class="linha"><input name="ordem" type="number" placeholder="Ordem" value="${esc(e.ordem ?? '')}" style="width:90px"><button>${e.id ? 'Salvar' : 'Cadastrar especialista'}</button>${status}${e.id ? `<button type="button" onclick="${esc(`if(confirm('Remover ${e.nome}?'))` + postar(k, 'especialista', `{id:'${e.id}',remover:true}`))}">Remover</button>` : ''}</div>
+${e.id && e.status === 'aprovada' ? `<div class="sub">${e.nota ? `★ ${e.nota} · ${e.avaliacoes} avaliação(ões) aprovada(s)` : 'Sem avaliações aprovadas ainda'}</div>` : ''}
 </form>`
-  return `<h2>Especialistas</h2><p class="sub">Enquanto não houver nenhuma cadastrada, o site mostra as personas de exemplo. A nota vem só das avaliações aprovadas.</p>${form()}${lista.map((e) => `<div style="margin-top:10px">${form(e)}</div>`).join('')}`
+  }
+  const ordenada = lista.slice().sort((a, b) => ordem[a.status] - ordem[b.status] || (a.ordem ?? 0) - (b.ordem ?? 0))
+  const pend = lista.filter((e) => e.status === 'pendente').length
+  return `${script}<h2>Especialistas${pend ? ` (${pend} aguardando aprovação)` : ''}</h2><p class="sub">Elas se cadastram pelo site em <b>#/especialista</b> e entram como pendentes. Só as aprovadas aparecem para o cliente. Enquanto não houver nenhuma aprovada, o site mostra as personas de exemplo. A nota vem só das avaliações aprovadas.</p>${form()}${ordenada.map((e) => `<div style="margin-top:10px">${form(e)}</div>`).join('')}`
 }
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
@@ -193,7 +229,7 @@ small{display:block;color:#86868b;font-size:11px}.scroll{overflow-x:auto}
 @media(max-width:640px){.passo{grid-template-columns:1fr 50px 50px}.barra{display:none}}
 </style></head><body><main>
 <h1>Céu Natal</h1>
-<nav class="abas">${[['funil', 'Funil'], ['perguntas', `Perguntas (${perguntas.filter((q) => q.status === 'aguardando').length})`], ['avaliacoes', `Avaliações (${(extras.avaliacoes || []).filter((a) => a.status === 'pendente').length})`], ['especialistas', 'Especialistas']]
+<nav class="abas">${[['funil', 'Funil'], ['perguntas', `Perguntas (${perguntas.filter((q) => q.status === 'aguardando').length})`], ['avaliacoes', `Avaliações (${(extras.avaliacoes || []).filter((a) => a.status === 'pendente').length})`], ['especialistas', `Especialistas (${(extras.especialistas || []).filter((e) => e.status === 'pendente').length})`]]
     .map(([id, nome]) => `<a href="?k=${k}&aba=${id}" class="${aba === id ? 'on' : ''}">${esc(nome)}</a>`)
     .join('')}</nav>
 ${aba === 'perguntas' ? blocoPerguntas(perguntas, k, nomes) || '<p class="sub">Nenhuma pergunta ainda.</p>' : ''}

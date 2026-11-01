@@ -103,7 +103,7 @@ export default function QuickPay({ data, pack, offer = '', cta, onPaid }) {
     <div className="space-y-4">
       <div className={`grid gap-3 ${wallets.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
         {wallets.map((w) => (
-          <WalletTab key={w} active={method === w} onClick={() => setMethod(w)} color={WALLETS[w].color} label={walletName(w)} note={walletNote(w)} />
+          <WalletTab key={w} id={w} active={method === w} onClick={() => setMethod(w)} color={WALLETS[w].color} label={walletName(w)} note={walletNote(w)} />
         ))}
       </div>
       {method === 'cvu' && (

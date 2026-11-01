@@ -26,7 +26,6 @@ import {
   StarIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline'
-import { StarIcon as StarSolid } from '@heroicons/react/24/solid'
 import Logo from './Logo'
 import CountrySwitcher from './CountrySwitcher'
 import Countdown from './Countdown'
@@ -37,6 +36,8 @@ import { addProfile } from '../lib/account'
 import { ZodiacWheel } from './Sky'
 import { computeChart } from '../lib/astro'
 import { useI18n } from '../i18n'
+import ProsShowcase from './pros/ProsShowcase'
+import Reviews from './Reviews'
 
 const reveal = {
   initial: { opacity: 0, y: 40 },
@@ -134,7 +135,10 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
       </div>
       <Bonuses />
       <HowItWorks quizDone={!!chart} />
-      <Testimonials />
+      <ProsShowcase />
+      <div className="mx-auto max-w-6xl px-5 pb-10">
+        <Reviews pro="" title={t('sales.testimonials.title')} />
+      </div>
       <Offer onBuy={buy} />
       <Faq />
       <Footer />
@@ -537,38 +541,6 @@ function HowItWorks({ quizDone }) {
   )
 }
 
-function Testimonials() {
-  const { t } = useI18n()
-  const list = t('testimonials')
-  const row = [...list, ...list]
-  return (
-    <section className="overflow-hidden py-24">
-      <SectionTitle eyebrow={t('sales.testimonials.eyebrow')} title={t('sales.testimonials.title')} />
-      <div className="relative mt-14 [mask-image:linear-gradient(90deg,transparent,black_10%,black_90%,transparent)]">
-        <motion.div className="flex w-max gap-5" animate={{ x: ['0%', '-50%'] }} transition={{ duration: 45, repeat: Infinity, ease: 'linear' }}>
-          {row.map((item, i) => (
-            <figure key={i} className="glass w-80 shrink-0 rounded-2xl p-6">
-              <div className="flex gap-0.5 text-gold-400">
-                {Array.from({ length: 5 }).map((_, k) => (
-                  <StarSolid key={k} className="h-4 w-4" />
-                ))}
-              </div>
-              <blockquote className="mt-4 text-white/80">“{item.text}”</blockquote>
-              <figcaption className="mt-5 flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-gold-400/40 to-lilac-400/30 text-sm font-semibold">{item.name[0]}</span>
-                <span className="text-sm">
-                  <span className="block font-medium">{item.name}</span>
-                  <span className="text-white/45">{item.city}</span>
-                </span>
-              </figcaption>
-            </figure>
-          ))}
-        </motion.div>
-      </div>
-    </section>
-  )
-}
-
 function Offer({ onBuy }) {
   const { t, money, c } = useI18n()
   return (
@@ -651,6 +623,8 @@ function Footer() {
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
           <Logo />
           <div className="flex gap-6 text-sm text-white/45">
+            <a href="#/avaliacoes" className="hover:text-white">{t('reviews.title')}</a>
+            <a href="#/especialista" className="hover:text-white">{t('showcase.eyebrow')}</a>
             {t('sales.footer.links').map((l) => (
               <a key={l} href="#" className="hover:text-white">
                 {l}

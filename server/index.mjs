@@ -4,7 +4,7 @@
 // Variáveis: DESLIGAR_METODOS (ex.: whop), HOTTRACK_API_KEY (ht_live_ ou ht_test_; sem ela as cobranças são simuladas),
 // PAINEL_TOKEN (senha do /painel), PORT (padrão 8787), DATA_DIR (padrão ./data).
 import { createServer } from 'node:http'
-import { createReadStream, existsSync, mkdirSync, readFileSync, appendFileSync, statSync } from 'node:fs'
+import { createReadStream, existsSync, mkdirSync, readFileSync, appendFileSync, statSync, writeFileSync } from 'node:fs'
 import { randomUUID, createHash } from 'node:crypto'
 import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -21,6 +21,8 @@ const SIMULADO = !KEY || KEY.startsWith('ht_test_')
 const PAINEL_TOKEN = process.env.PAINEL_TOKEN || ''
 
 mkdirSync(DATA, { recursive: true })
+const FOTOS = join(DATA, 'fotos')
+mkdirSync(FOTOS, { recursive: true })
 
 const hoje = () => new Date().toISOString().slice(0, 10)
 const gravar = (nome, obj) => appendFileSync(join(DATA, nome), JSON.stringify(obj) + '\n')
@@ -85,12 +87,27 @@ function notaDe(proId) {
   return { nota: Math.round((lista.reduce((s, a) => s + a.nota, 0) / lista.length) * 10) / 10, avaliacoes: lista.length }
 }
 
+const aprovada = (e) => (e.status || 'aprovada') === 'aprovada' && e.ativo !== false && !e.removido
+
 function especialistasPublicos() {
   return [...especialistas.mapa.values()]
-    .filter((e) => e.ativo !== false && !e.removido)
+    .filter(aprovada)
     .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || a.criadoEm.localeCompare(b.criadoEm))
-    .map((e) => ({ id: e.id, nome: e.nome, especialidade: e.especialidade, bio: e.bio, ...notaDe(e.id) }))
+    .map((e) => ({ id: e.id, nome: e.nome, especialidade: e.especialidade, especialidades: e.especialidades || [], bio: e.bio, foto: e.foto || null, ...notaDe(e.id) }))
 }
+
+// Foto em data URL (jpeg/png/webp, até ~1,5 MB): grava em DATA/fotos e devolve o caminho público
+function salvarFoto(id, dataUrl) {
+  const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ''))
+  if (!m) return null
+  const buf = Buffer.from(m[2], 'base64')
+  if (buf.length < 500 || buf.length > 1.5 * 1024 * 1024) return null
+  const nome = `${id}-${Date.now().toString(36)}.${m[1] === 'jpeg' ? 'jpg' : m[1]}`
+  writeFileSync(join(FOTOS, nome), buf)
+  return `/fotos/${nome}`
+}
+
+const limparLista = (v, max = 8) => (Array.isArray(v) ? v : String(v || '').split(',')).map((x) => String(x).trim().slice(0, 40)).filter(Boolean).slice(0, max)
 
 const porIpAvaliacao = new Map()
 function podeAvaliar(ipAddr) {
@@ -526,13 +543,48 @@ createServer(async (req, res) => {
       const nota = Math.round(Number(b.nota))
       const pro = b.pro ? String(b.pro).slice(0, 30) : ''
       if (nome.length < 2 || texto.length < 3 || !(nota >= 1 && nota <= 5)) return json(res, 400, { error: 'invalid' })
-      if (pro && !especialistas.mapa.has(pro)) return json(res, 400, { error: 'invalid_pro' })
+      if (pro && !(especialistas.mapa.has(pro) && aprovada(especialistas.mapa.get(pro)))) return json(res, 400, { error: 'invalid_pro' })
       if (!podeAvaliar(ip(req))) return json(res, 429, { error: 'rate_limited' })
       const sidA = String(b.sid || '').slice(0, 64)
       const comprou = !!sidA && [...pedidos.values()].some((p) => p.sid === sidA && p.status === 'paid')
       avaliacoes.salvar({ id: novoId(), nome, nota, texto, pro, sid: sidA, pais: COUNTRIES[b.country] ? b.country : '', verificada: comprou, status: 'pendente', criadoEm: new Date().toISOString() })
       gravar(`eventos-${hoje()}.jsonl`, { t: Date.now(), sid: sidA, ev: 'review_sent', country: COUNTRIES[b.country] ? b.country : '', props: { nota, pro } })
       return json(res, 200, { ok: true })
+    }
+
+    if (url.pathname === '/api/especialistas/cadastro' && req.method === 'POST') {
+      const b = await lerCorpo(req, 2 * 1024 * 1024)
+      const nome = String(b.nome || '').trim().slice(0, 60)
+      const especialidade = String(b.especialidade || '').trim().slice(0, 80)
+      const bio = String(b.bio || '').trim().slice(0, 600)
+      const email = String(b.email || '').trim().slice(0, 120)
+      const whatsapp = String(b.whatsapp || '').trim().slice(0, 30)
+      if (nome.length < 2 || especialidade.length < 2 || bio.length < 20 || !/^\S+@\S+\.\S+$/.test(email)) return json(res, 400, { error: 'invalid' })
+      if (!podeAvaliar('cad:' + ip(req))) return json(res, 429, { error: 'rate_limited' })
+      const id = novoId()
+      especialistas.salvar({
+        id,
+        nome,
+        especialidade,
+        especialidades: limparLista(b.especialidades),
+        bio,
+        foto: b.foto ? salvarFoto(id, b.foto) : null,
+        email,
+        whatsapp,
+        pais: COUNTRIES[b.country] ? b.country : '',
+        status: 'pendente',
+        origem: 'cadastro',
+        criadoEm: new Date().toISOString(),
+      })
+      return json(res, 200, { ok: true })
+    }
+
+    if (url.pathname.startsWith('/fotos/') && req.method === 'GET') {
+      const arq = normalize(join(FOTOS, decodeURIComponent(url.pathname.slice(7))))
+      if (!arq.startsWith(FOTOS) || !existsSync(arq)) return json(res, 404, { error: 'not_found' })
+      res.writeHead(200, { 'Content-Type': TIPOS[extname(arq)] || 'image/jpeg', 'Cache-Control': 'public, max-age=86400' })
+      createReadStream(arq).pipe(res)
+      return
     }
 
     if (url.pathname.startsWith('/api/painel/') && req.method === 'POST') {
@@ -550,11 +602,17 @@ createServer(async (req, res) => {
           especialistas.salvar({ ...atual, removido: true })
           return json(res, 200, { ok: true })
         }
+        if (b.status && atual && ['aprovada', 'recusada', 'pendente'].includes(b.status) && !b.nome) {
+          especialistas.salvar({ ...atual, status: b.status })
+          return json(res, 200, { ok: true })
+        }
         const nome = String(b.nome || '').trim().slice(0, 60)
         const especialidade = String(b.especialidade || '').trim().slice(0, 80)
         const bio = String(b.bio || '').trim().slice(0, 600)
         if (nome.length < 2 || especialidade.length < 2) return json(res, 400, { error: 'invalid' })
-        const e = { ...(atual || { id: novoId(), criadoEm: new Date().toISOString() }), nome, especialidade, bio, ativo: b.ativo !== false, ordem: Number(b.ordem) || 0 }
+        const base = atual || { id: novoId(), criadoEm: new Date().toISOString(), status: 'aprovada', origem: 'painel' }
+        const foto = b.foto ? salvarFoto(base.id, b.foto) : base.foto || null
+        const e = { ...base, nome, especialidade, especialidades: b.especialidades !== undefined ? limparLista(b.especialidades) : base.especialidades || [], bio, foto, ativo: b.ativo !== false, ordem: Number(b.ordem) || 0 }
         especialistas.salvar(e)
         return json(res, 200, { ok: true, id: e.id })
       }
@@ -570,7 +628,10 @@ createServer(async (req, res) => {
           resumo,
           url.searchParams,
           [...perguntas.values()].sort((a, b) => (a.status === b.status ? a.createdAt.localeCompare(b.createdAt) : a.status === 'aguardando' ? -1 : 1)),
-          { avaliacoes: [...avaliacoes.mapa.values()], especialistas: especialistasPublicos() },
+          {
+            avaliacoes: [...avaliacoes.mapa.values()],
+            especialistas: [...especialistas.mapa.values()].filter((e) => !e.removido).map((e) => ({ ...e, status: e.status || 'aprovada', ...notaDe(e.id) })),
+          },
         ),
       )
       return

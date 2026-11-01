@@ -289,6 +289,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
                   {wallets.map((w) => (
                     <WalletTab
                       key={w}
+                      id={w}
                       active={method === w}
                       onClick={() => {
                         setMethod(w)
@@ -462,7 +463,18 @@ function Input({ icon: Icon, error, className = '', ...props }) {
   )
 }
 
-export function WalletTab({ active, onClick, color, label, note }) {
+const PIX_PATH =
+  'M5.283 18.36a3.505 3.505 0 0 0 2.493-1.032l3.6-3.6a.684.684 0 0 1 .946 0l3.613 3.613a3.504 3.504 0 0 0 2.493 1.032h.71l-4.56 4.56a3.647 3.647 0 0 1-5.156 0L4.85 18.36ZM18.428 5.627a3.505 3.505 0 0 0-2.493 1.032l-3.613 3.614a.67.67 0 0 1-.946 0l-3.6-3.6A3.505 3.505 0 0 0 5.283 5.64h-.434l4.573-4.572a3.646 3.646 0 0 1 5.156 0l4.559 4.559ZM1.068 9.422 3.79 6.699h1.492a2.483 2.483 0 0 1 1.744.722l3.6 3.6a1.73 1.73 0 0 0 2.443 0l3.614-3.613a2.482 2.482 0 0 1 1.744-.723h1.767l2.737 2.737a3.646 3.646 0 0 1 0 5.156l-2.736 2.736h-1.768a2.482 2.482 0 0 1-1.744-.722l-3.613-3.613a1.77 1.77 0 0 0-2.444 0l-3.6 3.6a2.483 2.483 0 0 1-1.744.722H3.791l-2.723-2.723a3.646 3.646 0 0 1 0-5.156'
+
+export function PixLogo({ className = 'h-5 w-5' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d={PIX_PATH} />
+    </svg>
+  )
+}
+
+export function WalletTab({ id, active, onClick, color, label, note }) {
   return (
     <button
       type="button"
@@ -470,7 +482,7 @@ export function WalletTab({ active, onClick, color, label, note }) {
       className={`relative flex items-center gap-3 rounded-2xl border p-4 text-left transition ${active ? 'border-gold-400 bg-gold-400/10' : 'border-white/10 hover:border-white/25'}`}
     >
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xs font-bold text-white" style={{ background: color }}>
-        {label.slice(0, 2)}
+        {id === 'pix' ? <PixLogo /> : label.slice(0, 2)}
       </span>
       <span className="min-w-0">
         <span className="block truncate font-semibold">{label}</span>
@@ -760,12 +772,13 @@ export function LivePending({ order, holder, onPaid, onBack }) {
   } else if (code || ins.qr_code || ins.llave) {
     body = (
       <>
+        {o.wallet === 'pix' && <PixLogo className="mx-auto mb-3 h-10 w-10 text-[#32BCAD]" />}
         <h2 className="font-serif text-4xl font-semibold">{t('checkout.pending.qrTitle')}</h2>
         <p className="mt-2 text-white/60">{t(code && c.currency === 'BRL' ? 'checkout.pay.pixText' : 'checkout.pending.qrText', { wallet })}</p>
         {ins.llave && rows([[t('checkout.pay.key'), ins.llave, true], [t('checkout.pay.bank'), ins.bank_name], [t('checkout.pending.amount'), money(o.total)]])}
         {code && <CopyButton primary copied={copied === 'main'} onClick={() => copy(code, 'main')} label={t('checkout.pending.copy')} done={t('checkout.pending.copied')} />}
         {(qr || ins.qr_code) && (
-          <div className={`mx-auto mt-6 w-64 rounded-3xl bg-white p-4 ${code ? 'hidden sm:block' : ''}`} style={{ boxShadow: `0 0 60px -10px ${color}` }}>
+          <div className="mx-auto mt-6 w-60 rounded-3xl bg-white p-4" style={{ boxShadow: `0 0 60px -10px ${color}` }}>
             <img src={qr || ins.qr_code} alt="QR" className="w-full" />
           </div>
         )}
