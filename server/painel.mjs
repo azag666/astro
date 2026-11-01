@@ -1,6 +1,7 @@
 // Painel do funil: lê os eventos gravados por dia e conta pessoas únicas (sid) por passo.
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { ETAPAS } from './jornadas.mjs'
 
 export const PASSOS = [
   ['view', 'Entrou na página'],
@@ -130,6 +131,26 @@ function blocoAvaliacoes(lista, k, nomes) {
   return `<h2>Avaliações</h2><p class="sub">Qualquer pessoa avalia pelo site (#/avaliacoes ou na página da especialista). Só as aprovadas aparecem. "comprou" = o aparelho tem compra paga.</p>${itens || '<p class="sub">Nenhuma avaliação ainda.</p>'}`
 }
 
+function blocoLeads(lista, params, k) {
+  const etapa = params.get('etapa') || ''
+  const filtrada = lista.filter((x) => !etapa || x.etapa === etapa)
+  const contagem = Object.fromEntries(ETAPAS.map(([id]) => [id, lista.filter((x) => x.etapa === id).length]))
+  const q = (extra) => `?k=${k}&aba=leads${params.get('de') ? `&de=${esc(params.get('de'))}` : ''}${params.get('ate') ? `&ate=${esc(params.get('ate'))}` : ''}${extra}`
+  const fone = (t) => String(t || '').replace(/\D/g, '')
+  const linhas = filtrada
+    .slice(0, 500)
+    .map(
+      (x) => `<tr><td>${esc(x.ultima.slice(5, 16).replace('T', ' '))}</td><td>${esc(x.etapaNome)}</td><td style="white-space:normal;min-width:260px">${esc(x.motivo)}</td><td>${esc(x.nome)}</td><td>${x.email ? `<a href="mailto:${esc(x.email)}">${esc(x.email)}</a>` : ''}</td><td>${x.whatsapp ? `<a href="https://wa.me/${fone(x.whatsapp)}" target="_blank">${esc(x.whatsapp)}</a>` : ''}</td><td>${esc(x.pais)}</td><td>${esc(x.dor)}</td><td>${esc(x.campanha)}</td><td>${esc(x.criativo)}</td><td>${esc(x.pendente)}</td><td>${x.valorPago ? esc(`${x.valorPago} ${x.moeda}`) : ''}</td><td>${esc(x.tempo)}</td></tr>`,
+    )
+    .join('')
+  return `<h2>Leads e abandono</h2>
+<p class="sub">Cada pessoa aparece na etapa mais avançada a que chegou, com o motivo provável de ter parado. Padrão: últimas 24 h (UTC). E-mail e WhatsApp só de quem deixou no cadastro ou no pagamento.</p>
+<form><input type="hidden" name="k" value="${k}"><input type="hidden" name="aba" value="leads"><input type="date" name="de" value="${esc(params.get('de') || '')}"><input type="date" name="ate" value="${esc(params.get('ate') || '')}"><button>Filtrar</button>
+<a href="/api/painel/leads.csv${q(etapa ? `&etapa=${etapa}` : '')}" style="margin-left:8px">Baixar planilha (CSV)</a></form>
+<nav class="abas"><a href="${q('')}" class="${etapa ? '' : 'on'}">Todos (${lista.length})</a>${ETAPAS.map(([id, nome]) => `<a href="${q(`&etapa=${id}`)}" class="${etapa === id ? 'on' : ''}" title="${esc(nome)}">${esc(nome.split(' e ')[0].split(' (')[0])} (${contagem[id]})</a>`).join('')}</nav>
+<div class="scroll"><table><tr><th>Último acesso</th><th>Parou em</th><th>Motivo provável</th><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>País</th><th>Dor</th><th>Campanha</th><th>Criativo</th><th>Pagamento aberto</th><th>Pagou</th><th>Tempo</th></tr>${linhas || '<tr><td colspan="13">Sem dados no período</td></tr>'}</table></div>`
+}
+
 function blocoEspecialistas(lista, k) {
   const ordem = { pendente: 0, aprovada: 1, recusada: 2 }
   const script = `<script>
@@ -192,7 +213,7 @@ function tabelaFunil(titulo, grupos) {
 
 export function painelHtml(r, params, perguntas = [], extras = {}) {
   const k = esc(params.get('k') || '')
-  const aba = ['funil', 'perguntas', 'avaliacoes', 'especialistas'].includes(params.get('aba')) ? params.get('aba') : 'funil'
+  const aba = ['funil', 'leads', 'perguntas', 'avaliacoes', 'especialistas'].includes(params.get('aba')) ? params.get('aba') : 'funil'
   const nomes = Object.fromEntries((extras.especialistas || []).map((e) => [e.id, e.nome]))
   const maior = Math.max(1, r.funil.view || 0)
   const barras = PASSOS.map(([key, nome], i) => {
@@ -229,9 +250,10 @@ small{display:block;color:#86868b;font-size:11px}.scroll{overflow-x:auto}
 @media(max-width:640px){.passo{grid-template-columns:1fr 50px 50px}.barra{display:none}}
 </style></head><body><main>
 <h1>Céu Natal</h1>
-<nav class="abas">${[['funil', 'Funil'], ['perguntas', `Perguntas (${perguntas.filter((q) => q.status === 'aguardando').length})`], ['avaliacoes', `Avaliações (${(extras.avaliacoes || []).filter((a) => a.status === 'pendente').length})`], ['especialistas', `Especialistas (${(extras.especialistas || []).filter((e) => e.status === 'pendente').length})`]]
+<nav class="abas">${[['funil', 'Funil'], ['leads', 'Leads e abandono'], ['perguntas', `Perguntas (${perguntas.filter((q) => q.status === 'aguardando').length})`], ['avaliacoes', `Avaliações (${(extras.avaliacoes || []).filter((a) => a.status === 'pendente').length})`], ['especialistas', `Especialistas (${(extras.especialistas || []).filter((e) => e.status === 'pendente').length})`]]
     .map(([id, nome]) => `<a href="?k=${k}&aba=${id}" class="${aba === id ? 'on' : ''}">${esc(nome)}</a>`)
     .join('')}</nav>
+${aba === 'leads' ? blocoLeads(extras.jornadas || [], params, k) : ''}
 ${aba === 'perguntas' ? blocoPerguntas(perguntas, k, nomes) || '<p class="sub">Nenhuma pergunta ainda.</p>' : ''}
 ${aba === 'avaliacoes' ? blocoAvaliacoes(extras.avaliacoes || [], k, nomes) : ''}
 ${aba === 'especialistas' ? blocoEspecialistas(extras.especialistas || [], k) : ''}

@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url'
 import { COUNTRIES, htMethod, orderTotal } from '../src/i18n/paises.js'
 import { painelHtml, resumoDoFunil } from './painel.mjs'
 import { capiLigada, evento, lembrar, pixelId } from './capi.mjs'
+import { csvDeJornadas, jornadas } from './jornadas.mjs'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const DIST = join(ROOT, 'dist')
@@ -436,7 +437,7 @@ function lerCorpo(req, limite = 16 * 1024) {
 }
 
 const META_EVENTOS = { view: 'PageView', quiz_start: 'ViewContent', signup: 'Lead', checkout_view: 'InitiateCheckout' }
-const EVENTOS = new Set(['view', 'quiz_start', 'quiz_step', 'signup', 'login', 'report_view', 'offer_view', 'buy_click', 'checkout_view', 'method_select', 'bump_toggle', 'pay_click', 'code_copy', 'redirect_open', 'paid_view', 'back_offer_view', 'back_offer_accept', 'upsell_accept', 'upsell_decline', 'pro_open', 'pack_select', 'review_open'])
+const EVENTOS = new Set(['view', 'quiz_start', 'quiz_step', 'signup', 'login', 'report_view', 'offer_view', 'buy_click', 'checkout_view', 'method_select', 'bump_toggle', 'pay_click', 'code_copy', 'redirect_open', 'paid_view', 'back_offer_view', 'back_offer_accept', 'upsell_accept', 'upsell_decline', 'pro_open', 'pack_select', 'review_open', 'offer_scroll', 'checkout_invalid'])
 
 createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x')
@@ -653,6 +654,16 @@ createServer(async (req, res) => {
       }
     }
 
+    if (url.pathname === '/api/painel/leads.csv' || url.pathname === '/api/painel/leads') {
+      if (!PAINEL_TOKEN || url.searchParams.get('k') !== PAINEL_TOKEN) return json(res, 404, { error: 'not_found' })
+      const etapa = url.searchParams.get('etapa')
+      const lista = jornadas(DATA, pedidos, { de: url.searchParams.get('de'), ate: url.searchParams.get('ate') }).filter((x) => !etapa || x.etapa === etapa)
+      if (url.pathname.endsWith('.json') || url.pathname === '/api/painel/leads') return json(res, 200, { leads: lista })
+      res.writeHead(200, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="ceunatal-leads-${hoje()}.csv"` })
+      res.end(csvDeJornadas(lista))
+      return
+    }
+
     if (url.pathname === '/painel' || url.pathname === '/api/painel') {
       if (!PAINEL_TOKEN || url.searchParams.get('k') !== PAINEL_TOKEN) return json(res, 404, { error: 'not_found' })
       const resumo = resumoDoFunil(DATA, pedidos, { de: url.searchParams.get('de'), ate: url.searchParams.get('ate'), country: url.searchParams.get('pais'), campaign: url.searchParams.get('campanha') })
@@ -665,6 +676,7 @@ createServer(async (req, res) => {
           [...perguntas.values()].sort((a, b) => (a.status === b.status ? a.createdAt.localeCompare(b.createdAt) : a.status === 'aguardando' ? -1 : 1)),
           {
             avaliacoes: [...avaliacoes.mapa.values()],
+            jornadas: url.searchParams.get('aba') === 'leads' ? jornadas(DATA, pedidos, { de: url.searchParams.get('de'), ate: url.searchParams.get('ate') }) : null,
             especialistas: [...especialistas.mapa.values()].filter((e) => !e.removido).map((e) => ({ ...e, status: e.status || 'aprovada', ...notaDe(e.id) })),
           },
         ),

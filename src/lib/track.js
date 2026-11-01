@@ -30,8 +30,15 @@ export const utm = (() => {
 })()
 
 const ctx = { country: '', focus: '' }
+// Microsoft Clarity: a gravação leva o mesmo sid do painel e as marcas de país, dor, campanha e passo
+const clarity = (...a) => window.clarity?.(...a)
+clarity('identify', sid)
+for (const [k, v] of Object.entries(utm)) clarity('set', k, String(v))
+
 export function setTrackContext(next) {
   Object.assign(ctx, next)
+  if (next.country) clarity('set', 'pais', next.country)
+  if (next.focus) clarity('set', 'dor', next.focus)
 }
 
 let queue = []
@@ -50,6 +57,9 @@ function flush() {
 const META = { view: 'PageView', quiz_start: 'ViewContent', signup: 'Lead', checkout_view: 'InitiateCheckout' }
 
 export function track(ev, props) {
+  clarity('event', ev)
+  clarity('set', 'ultimo_passo', ev)
+  if (ev === 'quiz_step' && props?.step) clarity('set', 'quiz_pergunta', String(props.step))
   if (META[ev]) {
     const eid = `${ev}-${sid}-${Date.now().toString(36)}`
     const { value, currency } = props || {}

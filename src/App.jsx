@@ -111,6 +111,24 @@ export default function App() {
 
   const toOffer = useCallback(() => go('offer'), [go])
 
+  // Até onde a pessoa rolou a oferta (25/50/75/100%): diz se ela chegou a ver o preço
+  useEffect(() => {
+    if (screen !== 'offer') return
+    const vistos = new Set()
+    const onScroll = () => {
+      const alto = document.documentElement.scrollHeight - window.innerHeight
+      const pct = alto > 0 ? (window.scrollY / alto) * 100 : 100
+      for (const marco of [25, 50, 75, 100]) {
+        if (pct >= marco - 2 && !vistos.has(marco)) {
+          vistos.add(marco)
+          track('offer_scroll', { pct: marco })
+        }
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [screen])
+
   // Back redirect: na primeira vez na oferta, o "voltar" do navegador cai na tela de desconto
   useEffect(() => {
     if (screen !== 'offer' || offer || sessionStorage.getItem('ceu-natal-volta')) return

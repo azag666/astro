@@ -110,6 +110,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
     setTouched(true)
     setPayError('')
     if (Object.keys(errors).length) {
+      track('checkout_invalid', { fields: Object.keys(errors).join(',') })
       if (errors.name || errors.email || errors.phone) setEditContact(true)
       return
     }
