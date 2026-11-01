@@ -554,5 +554,18 @@ createServer(async (req, res) => {
   }
 }).listen(PORT, '127.0.0.1', () => {
   console.log(`Céu Natal em http://127.0.0.1:${PORT} · cobranças ${KEY ? (SIMULADO ? 'de teste (ht_test_)' : 'REAIS') : 'simuladas (sem chave)'}`)
+  if (KEY) conferirChave()
 })
+
+// Confere a chave na HotTrack ao ligar: nome, escopos e se falta algum que o site usa
+async function conferirChave() {
+  try {
+    const me = await hottrack('/me')
+    const escopos = me.scopes || me.escopos || []
+    const faltam = ['write:charges', 'read:sales'].filter((e) => !escopos.includes(e))
+    console.log(`Chave OK: ${me.name || me.key_name || ''} · conta ${me.seller_id ?? me.account?.id ?? ''} · escopos ${escopos.join(', ')}${faltam.length ? ` · FALTAM: ${faltam.join(', ')}` : ''}`)
+  } catch (e) {
+    console.error(`CHAVE INVÁLIDA (${e.code}): ${e.message}. As cobranças vão falhar até corrigir HOTTRACK_API_KEY.`)
+  }
+}
 
