@@ -28,4 +28,4 @@ public/mediapipe/
 .env*
 
 # Eventos, leads e pedidos gravados pelo servidor
-data/
+/data/
