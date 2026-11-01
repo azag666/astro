@@ -59,6 +59,8 @@ export default function App() {
   })
   const [order, setOrder] = useState(null)
   const [account, setAccount] = useState(currentAccount)
+  // Perfil para quem o mapa está sendo comprado (null = o próprio comprador)
+  const [buyFor, setBuyFor] = useState(null)
 
   useEffect(() => {
     sessionStorage.setItem('ceu-natal', JSON.stringify(data))
@@ -130,7 +132,10 @@ export default function App() {
             <SalesPage
               data={data}
               account={account}
-              onBuy={() => go('checkout')}
+              onBuy={(profile) => {
+                setBuyFor(profile || null)
+                go('checkout')
+              }}
               onCountry={setCountry}
               onLogout={() => {
                 logout()
@@ -143,12 +148,13 @@ export default function App() {
           {screen === 'checkout' && (
             <Checkout
               key={country}
+              buyFor={buyFor}
               data={data}
               setData={setData}
               onBack={toOffer}
               onPaid={(o) => {
                 setOrder(o)
-                addOrder(o)
+                addOrder({ ...o, profileId: buyFor?.id })
                 setAccount(currentAccount())
                 go('success')
               }}
