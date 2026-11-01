@@ -129,7 +129,9 @@ function motivo(x, aberto, agora) {
     case 'entrou':
       return 'Saiu na primeira tela (anúncio × página não convenceu, ou página lenta)'
     case 'quiz':
-      return `Parou na pergunta ${x.quiz.ultima} (${x.quiz.nome || '?'})${x.quiz.nome === 'account' ? ': não quis deixar e-mail/WhatsApp' : x.quiz.nome === 'palm' ? ': leitura da mão (câmera)' : x.quiz.nome === 'city' ? ': busca da cidade' : ''}`
+      if (x.quiz.nome === 'dados') return 'Parou nos dados de nascimento (nome, data, hora, cidade)'
+      if (x.quiz.nome === 'account') return 'Parou no contato: não quis deixar e-mail/WhatsApp'
+      return `Parou na pergunta ${x.quiz.ultima} (${x.quiz.nome || '?'})${x.quiz.nome === 'palm' ? ': leitura da mão (câmera)' : x.quiz.nome === 'city' ? ': busca da cidade' : ''}`
     case 'cadastro':
       return 'Deixou contato e saiu na tela de análise (antes de ver o resultado)'
     case 'oferta':
