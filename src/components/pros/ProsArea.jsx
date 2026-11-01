@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeftIcon, ChatBubbleLeftRightIcon, ClockIcon } from '@heroicons/react/24/solid'
+import { ArrowLeftIcon, ChatBubbleLeftRightIcon, ClockIcon, StarIcon } from '@heroicons/react/24/solid'
 import { useI18n } from '../../i18n'
 import { PACKS } from '../../i18n/paises.js'
 import { sid, track } from '../../lib/track'
 import QuickPay from './QuickPay'
+import Reviews from '../Reviews'
+import { detalhesDoPro } from '../../data/avaliacoes'
 
 // Especialistas (personas). A resposta é escrita pela equipe no /painel, assinada pela especialista escolhida.
 export const PROS = [
@@ -19,6 +21,21 @@ export function ProAvatar({ pro, size = 'h-14 w-14 text-2xl' }) {
   return (
     <span className={`relative grid shrink-0 place-items-center rounded-full font-serif text-white ${size}`} style={{ background: `linear-gradient(135deg, ${pro.from}, ${pro.to})` }}>
       {pro.glyph}
+    </span>
+  )
+}
+
+// Nota, nº de avaliações e anos de prática (src/data/avaliacoes.js): reais, ou só na maquete com selo
+export function ProStats({ id }) {
+  const { t, c } = useI18n()
+  const d = detalhesDoPro(id)
+  if (!d) return null
+  return (
+    <span className="flex flex-wrap items-center gap-x-2 text-xs font-normal text-white/60">
+      <span className="flex items-center gap-1"><StarIcon className="h-3.5 w-3.5 text-gold-400" /> {d.nota.toLocaleString(c.locale)}</span>
+      <span>· {t('pros.reviews', { n: d.avaliacoes.toLocaleString(c.locale) })}</span>
+      <span>· {t('pros.years', { n: d.anos })}</span>
+      {d.exemplo && <span className="rounded-full bg-rose-500/80 px-1.5 text-[10px] font-bold uppercase text-white">exemplo</span>}
     </span>
   )
 }
@@ -70,6 +87,7 @@ export default function ProsArea({ data, profiles = [], initialPro = null }) {
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5 font-semibold">{i.name}</span>
                       <span className="block text-sm text-gold-300/90">{i.role}</span>
+                      <ProStats id={x.id} />
                       <span className="mt-1 block text-sm text-white/55">{i.bio}</span>
                       <span className="mt-2 flex flex-wrap gap-1.5">
                         {i.tags.map((tag) => (
@@ -111,6 +129,7 @@ export default function ProsArea({ data, profiles = [], initialPro = null }) {
                 </button>
               ))}
             </div>
+            <Reviews pro={pro.id} produto="perguntas" title={t('pros.reviewsTitle', { name: p.name })} />
           </motion.div>
         )}
 
@@ -170,6 +189,7 @@ function ProHeader({ pro, p }) {
       <div>
         <p className="font-serif text-2xl font-semibold">{p.name}</p>
         <p className="text-sm text-gold-300/90">{p.role}</p>
+        <ProStats id={pro.id} />
         <p className="mt-0.5 flex items-center gap-3 text-xs text-white/55">
           <span className="flex items-center gap-1"><ClockIcon className="h-3.5 w-3.5" /> {t('pros.answerIn')}</span>
         </p>
