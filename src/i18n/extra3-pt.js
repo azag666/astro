@@ -1,0 +1,30 @@
+// Camada 4 (pt-BR): perfil somente leitura + múltiplos perfis.
+export default {
+  profiles: {
+    main: 'Perfil principal',
+    of: 'Perfil de {name}',
+    born: 'Nasceu em {date}',
+    at: 'às {time}',
+    unknownTime: 'hora não informada',
+    readOnly: 'Dados calculados a partir do nascimento. Para corrigir, fale com o suporte.',
+    add: 'Adicionar perfil',
+    addHint: 'Veja o céu de quem você ama',
+    headlineOther: 'O céu de {name}, calculado agora.',
+    accentOther: 'Veja o que o mapa revela e desbloqueie o completo.',
+    buyFor: 'Quero o mapa completo de {name}',
+    relations: { partner: 'Parceiro(a)', child: 'Filho(a)', parent: 'Mãe ou pai', friend: 'Amigo(a)', other: 'Outra pessoa' },
+    sheet: {
+      title: 'Adicionar um novo perfil',
+      sub: 'Calculamos o mapa real dessa pessoa na hora. O perfil fica salvo na sua área.',
+      name: 'Nome completo',
+      relation: 'Quem é essa pessoa para você?',
+      gender: { f: 'Mulher', m: 'Homem', n: 'Prefiro não dizer' },
+      date: 'Data de nascimento',
+      time: 'Hora de nascimento',
+      unknown: 'Não sei a hora',
+      city: 'Cidade de nascimento',
+      save: 'Criar perfil',
+      cancel: 'Cancelar',
+    },
+  },
+}

@@ -12,14 +12,18 @@ import extra2Es from './extra2-es'
 import extra2EsAR from './extra2-es-ar'
 import extra2Zh from './extra2-zh'
 import pagamento from './pagamento'
+import extra3Pt from './extra3-pt'
+import extra3Es from './extra3-es'
+import extra3EsAR from './extra3-es-ar'
+import extra3Zh from './extra3-zh'
 
 export { WALLETS, COUNTRIES } from './paises.js'
 import { COUNTRIES, WALLETS } from './paises.js'
 
 const DICTS = {
-  pt: merge(merge(merge(pt, extraPt), extra2Pt), pagamento.pt),
-  es: merge(merge(merge(es, extraEs), extra2Es), pagamento.es),
-  zh: merge(merge(merge(zh, extraZh), extra2Zh), pagamento.zh),
+  pt: [extraPt, extra2Pt, extra3Pt, pagamento.pt].reduce(merge, pt),
+  es: [extraEs, extra2Es, extra3Es, pagamento.es].reduce(merge, es),
+  zh: [extraZh, extra2Zh, extra3Zh, pagamento.zh].reduce(merge, zh),
 }
 
 function merge(base, over) {
@@ -58,7 +62,7 @@ const I18n = createContext(null)
 export function I18nProvider({ country, gender, children }) {
   const value = useMemo(() => {
     const c = COUNTRIES[country]
-    const dict = c.variant === 'ar' ? merge(merge(merge(merge(DICTS.es, esAR), extraEsAR), extra2EsAR), pagamento.esAR) : DICTS[c.lang]
+    const dict = c.variant === 'ar' ? [esAR, extraEsAR, extra2EsAR, extra3EsAR, pagamento.esAR].reduce(merge, DICTS.es) : DICTS[c.lang]
     const money = new Intl.NumberFormat(c.locale, {
       style: 'currency',
       currency: c.currency,

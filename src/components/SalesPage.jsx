@@ -31,6 +31,9 @@ import Logo from './Logo'
 import CountrySwitcher from './CountrySwitcher'
 import Countdown from './Countdown'
 import FreeReport from './FreeReport'
+import ProfileCard, { ProfileSwitcher } from './ProfileHeader'
+import AddProfileSheet from './AddProfileSheet'
+import { addProfile } from '../lib/account'
 import { ZodiacWheel } from './Sky'
 import { computeChart } from '../lib/astro'
 import { useI18n } from '../i18n'
@@ -51,10 +54,20 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
   const [scrolled, setScrolled] = useState(false)
   useMotionValueEvent(scrollY, 'change', (v) => setScrolled(v > 500))
 
+  const [profiles, setProfiles] = useState(() => account?.profiles || [])
+  const [activeId, setActiveId] = useState('main')
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const mainProfile = { id: 'main', name: data.name, birthDate: data.birthDate, birthTime: data.birthTime, unknownTime: data.unknownTime, place: data.place }
+  const active = profiles.find((p) => p.id === activeId) || mainProfile
+  const isMain = active.id === 'main'
+  // O perfil ativo herda foco e contato do comprador; mão só existe no perfil principal
+  const view = isMain ? data : { ...data, ...active, palm: null, focus: active.relation === 'partner' ? 'amor' : data.focus }
+
   const chart = useMemo(
-    () => (data.birthDate ? computeChart({ birthDate: data.birthDate, birthTime: data.birthTime, unknownTime: data.unknownTime, place: data.place }) : null),
-    [data.birthDate, data.birthTime, data.unknownTime, data.place],
+    () => (view.birthDate ? computeChart({ birthDate: view.birthDate, birthTime: view.birthTime, unknownTime: view.unknownTime, place: view.place }) : null),
+    [view.birthDate, view.birthTime, view.unknownTime, view.place],
   )
+  const buy = () => onBuy(isMain ? null : active)
 
   return (
     <div className="relative">
@@ -68,7 +81,7 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  onClick={onBuy}
+                  onClick={buy}
                   className="hidden rounded-full bg-gold-400 px-5 py-2 text-sm font-semibold text-night-950 transition hover:bg-gold-300 sm:block"
                 >
                   {t('sales.buyShort', { price: money(c.price) })}
@@ -81,17 +94,48 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
         {account && chart && <MemberTabs />}
       </header>
 
-      {chart ? <FreeReport data={data} chart={chart} orders={account?.orders || []} onBuy={onBuy} /> : <GenericHero onBuy={onBuy} />}
+      {account && chart && (
+        <section className="mx-auto max-w-3xl px-4 pt-4 sm:px-5">
+          <ProfileSwitcher profiles={[mainProfile, ...profiles]} activeId={active.id} onSelect={setActiveId} onAdd={() => setSheetOpen(true)} />
+          <div className="glass mt-3 rounded-3xl p-5">
+            <ProfileCard profile={active} chart={chart} isMain={isMain} />
+          </div>
+        </section>
+      )}
+      {chart ? (
+        <FreeReport
+          key={active.id}
+          data={view}
+          chart={chart}
+          isMain={isMain}
+          orders={(account?.orders || []).filter((o) => (o.profileId || 'main') === active.id)}
+          onBuy={buy}
+        />
+      ) : (
+        <GenericHero onBuy={buy} />
+      )}
+      <AddProfileSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onSave={(p) => {
+          const saved = addProfile(p)
+          if (!saved) return
+          setProfiles((list) => [...list, saved])
+          setActiveId(saved.id)
+          setSheetOpen(false)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }}
+      />
       <TrustBar />
       <Engine />
       <WhatYouGet />
       <div id="pacote" className="scroll-mt-28">
-        <Stack focus={data.focus || 'espiritual'} onBuy={onBuy} />
+        <Stack focus={data.focus || 'espiritual'} onBuy={buy} />
       </div>
       <Bonuses />
       <HowItWorks quizDone={!!chart} />
       <Testimonials />
-      <Offer onBuy={onBuy} />
+      <Offer onBuy={buy} />
       <Faq />
       <Footer />
 
@@ -104,7 +148,7 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
             transition={{ type: 'spring', damping: 24 }}
             className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-night-950/90 p-3 backdrop-blur-xl sm:hidden"
           >
-            <button onClick={onBuy} className="btn-gold w-full py-3.5">
+            <button onClick={buy} className="btn-gold w-full py-3.5">
               {t('sales.buyMobile', { price: money(c.price) })}
               <ArrowRightIcon className="h-4 w-4" />
             </button>

@@ -4,7 +4,7 @@ import { CheckCircleIcon, MapPinIcon } from '@heroicons/react/24/outline'
 import { searchCity } from '../lib/astro'
 import { useI18n } from '../i18n'
 
-export default function CitySearch({ place, onSelect }) {
+export default function CitySearch({ place, onSelect, autoFocus = true }) {
   const { t, lang } = useI18n()
   const [query, setQuery] = useState(place ? place.name : '')
   const [results, setResults] = useState([])
@@ -35,7 +35,7 @@ export default function CitySearch({ place, onSelect }) {
       <div className="relative">
         <MapPinIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gold-300/70" />
         <input
-          autoFocus
+          autoFocus={autoFocus}
           className={`field pl-12 pr-12 ${selected ? 'border-gold-400/60' : ''}`}
           placeholder={t('quiz.city.placeholder')}
           value={query}

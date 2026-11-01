@@ -25,7 +25,7 @@ const reveal = {
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
-export default function FreeReport({ data, chart, orders = [], onBuy }) {
+export default function FreeReport({ data, chart, isMain = true, orders = [], onBuy }) {
   const { t, c, money } = useI18n()
   const focus = data.focus || 'espiritual'
   const focusShort = t(`focus.${focus}.short`)
@@ -97,8 +97,10 @@ export default function FreeReport({ data, chart, orders = [], onBuy }) {
           <span>{t('report.focusTag', { focus: focusShort })}</span>
         </div>
         <div className="px-5 pb-6 pt-5">
-          <h1 className="font-serif text-[2rem] font-semibold leading-tight sm:text-5xl">{t(`sales.headlineByFocus.${focus}`, { name })}</h1>
-          <p className="mt-2 text-gradient-gold font-serif text-xl italic">{t('sales.headlineAccent')}</p>
+          <h1 className="font-serif text-[2rem] font-semibold leading-tight sm:text-5xl">
+            {isMain ? t(`sales.headlineByFocus.${focus}`, { name }) : t('profiles.headlineOther', { name })}
+          </h1>
+          <p className="mt-2 text-gradient-gold font-serif text-xl italic">{isMain ? t('sales.headlineAccent') : t('profiles.accentOther')}</p>
           <p className="mt-3 flex items-center gap-2 text-xs text-white/45">
             <motion.span className="h-2 w-2 rounded-full bg-emerald-400" animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 1.6 }} />
             {t('report.generated')}
@@ -294,7 +296,7 @@ export default function FreeReport({ data, chart, orders = [], onBuy }) {
         </div>
         <p className="mt-3 text-sm text-white/60">{t('report.seenSub')}</p>
         <button onClick={onBuy} className="btn-gold mt-5 w-full text-lg">
-          {t('sales.unlock')} <ArrowRightIcon className="h-5 w-5" />
+          {isMain ? t('sales.unlock') : t('profiles.buyFor', { name })} <ArrowRightIcon className="h-5 w-5" />
         </button>
         <p className="mt-2 text-center text-sm text-white/50">{t('sales.priceLine', { from: money(c.from), price: money(c.price) })}</p>
       </motion.div>

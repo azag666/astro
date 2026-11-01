@@ -14,13 +14,16 @@ function all() {
 }
 
 export function saveAccount(data, country) {
-  const list = all().filter((a) => a.email !== data.email.trim().toLowerCase())
+  const email = data.email.trim().toLowerCase()
+  const prev = all().find((a) => a.email === email)
+  const list = all().filter((a) => a.email !== email)
   const account = {
     email: data.email.trim().toLowerCase(),
     phone: digits(data.phone),
     country,
     data,
-    orders: list.find((a) => a.email === data.email)?.orders || [],
+    orders: prev?.orders || [],
+    profiles: prev?.profiles || [],
     createdAt: new Date().toISOString(),
   }
   list.push(account)
@@ -53,4 +56,14 @@ export function addOrder(order) {
   if (!email) return
   const list = all().map((a) => (a.email === email ? { ...a, orders: [...a.orders, { ...order, at: new Date().toISOString() }] } : a))
   localStorage.setItem(KEY, JSON.stringify(list))
+}
+
+// Perfis extras (parceiro, filhos, amigos…) ligados à conta logada
+export function addProfile(profile) {
+  const email = localStorage.getItem(CURRENT)
+  if (!email) return null
+  const p = { ...profile, id: `p${Date.now().toString(36)}`, createdAt: new Date().toISOString() }
+  const list = all().map((a) => (a.email === email ? { ...a, profiles: [...(a.profiles || []), p] } : a))
+  localStorage.setItem(KEY, JSON.stringify(list))
+  return p
 }
