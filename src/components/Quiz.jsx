@@ -16,6 +16,8 @@ import {
   CalendarDaysIcon,
   ChartBarIcon,
   CheckIcon,
+  DevicePhoneMobileIcon,
+  KeyIcon,
   ClockIcon,
   EnvelopeIcon,
   ExclamationTriangleIcon,
@@ -34,7 +36,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { quickSunSign, SIGN_GLYPHS, SIGN_KEYS } from '../lib/astro'
-import { isEmail } from '../lib/format'
+import { isEmail, maskPhone } from '../lib/format'
 import { useI18n } from '../i18n'
 import CitySearch from './CitySearch'
 import PalmScan from './PalmScan'
@@ -50,7 +52,7 @@ const ICONS = {
   experience: { never: SparklesIcon, sign: SunIcon, done: BookOpenIcon },
 }
 
-const ALL_STEPS = ['gender', 'focus', 'situation', 'insight', 'agree1', 'agree2', 'experience', 'name', 'birthDate', 'whyMore', 'birthTime', 'city', 'palm', 'email']
+const ALL_STEPS = ['gender', 'focus', 'situation', 'insight', 'agree1', 'agree2', 'experience', 'name', 'birthDate', 'whyMore', 'birthTime', 'city', 'palm', 'account']
 
 const slide = {
   initial: (dir) => ({ opacity: 0, x: dir * 40, filter: 'blur(6px)' }),
@@ -60,10 +62,10 @@ const slide = {
 
 export default function Quiz({ data, setData, onDone, focusLocked }) {
   const STEPS = focusLocked ? ALL_STEPS.filter((s) => s !== 'focus') : ALL_STEPS
-  const { t } = useI18n()
+  const { t, c, country } = useI18n()
   const [step, setStep] = useState(0)
   const [dir, setDir] = useState(1)
-  const [emailError, setEmailError] = useState(false)
+  const [errors, setErrors] = useState({})
 
   const id = STEPS[step]
   const total = STEPS.length
@@ -220,38 +222,66 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
         </div>
       )
       break
-    case 'email':
+    case 'account': {
+      const phoneOk = data.phone.replace(/\D/g, '').length >= c.phone.min
+      const submit = () => {
+        const e = {}
+        if (!isEmail(data.email)) e.email = t('quiz.account.errors.email')
+        if (!phoneOk) e.phone = t('quiz.account.errors.phone')
+        if (!data.consent) e.consent = t('quiz.account.errors.consent')
+        setErrors(e)
+        if (!Object.keys(e).length) next()
+      }
       content = (
-        <Form
-          onSubmit={() => {
-            if (!isEmail(data.email)) return setEmailError(true)
-            next()
-          }}
-        >
-          <Title title={t('quiz.email.title')} hint={t('quiz.email.hint')} />
-          <Field icon={EnvelopeIcon}>
-            <input
-              autoFocus
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              className={`field pl-12 ${emailError ? 'border-rose-400/70' : ''}`}
-              placeholder={t('quiz.email.placeholder')}
-              value={data.email}
-              onChange={(e) => {
-                set({ email: e.target.value })
-                setEmailError(false)
-              }}
-            />
-          </Field>
-          {emailError && <p className="mt-1 pl-1 text-xs text-rose-300">{t('quiz.email.invalid')}</p>}
-          <Next label={t('quiz.email.cta')} />
-          <button type="button" onClick={next} className="mt-3 w-full py-2 text-sm text-white/40 hover:text-white/70">
-            {t('quiz.email.skip')}
-          </button>
+        <Form onSubmit={submit}>
+          <Title title={t('quiz.account.title')} hint={t('quiz.account.hint')} />
+          <div className="space-y-3">
+            <div>
+              <Field icon={EnvelopeIcon}>
+                <input
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  className={`field pl-12 ${errors.email ? 'border-rose-400/70' : ''}`}
+                  placeholder={t('quiz.account.email')}
+                  value={data.email}
+                  onChange={(e) => set({ email: e.target.value })}
+                />
+              </Field>
+              {errors.email && <p className="mt-1 pl-1 text-xs text-rose-300">{errors.email}</p>}
+            </div>
+            <div>
+              <div className={`flex overflow-hidden rounded-xl border bg-white/[0.05] transition focus-within:border-gold-400/70 ${errors.phone ? 'border-rose-400/70' : 'border-white/10'}`}>
+                <span className="flex items-center gap-2 border-r border-white/10 px-3 text-sm text-white/60">
+                  <DevicePhoneMobileIcon className="h-5 w-5 text-gold-300/70" />
+                  {c.phone.code}
+                </span>
+                <input
+                  inputMode="tel"
+                  autoComplete="tel-national"
+                  aria-label={t('quiz.account.phone')}
+                  placeholder={c.phone.placeholder}
+                  value={data.phone}
+                  onChange={(e) => set({ phone: country === 'br' ? maskPhone(e.target.value) : e.target.value.replace(/[^\d ]/g, '').slice(0, c.phone.max + 3) })}
+                  className="w-full bg-transparent px-3 py-3.5 text-white placeholder-white/35 outline-none"
+                />
+              </div>
+              {errors.phone && <p className="mt-1 pl-1 text-xs text-rose-300">{errors.phone}</p>}
+            </div>
+            <label className="flex cursor-pointer items-start gap-3 px-1 pt-1 text-sm text-white/65">
+              <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-gold-400" checked={!!data.consent} onChange={(e) => set({ consent: e.target.checked })} />
+              {t('quiz.account.consent')}
+            </label>
+            {errors.consent && <p className="pl-1 text-xs text-rose-300">{errors.consent}</p>}
+          </div>
+          <Next label={t('quiz.account.cta')} />
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-white/45">
+            <KeyIcon className="h-3.5 w-3.5" /> {t('quiz.account.passwordless')}
+          </p>
         </Form>
       )
       break
+    }
   }
 
   return (

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowRightIcon, ClockIcon, LockClosedIcon, ShieldCheckIcon, StarIcon } from '@heroicons/react/24/solid'
+import { ArrowRightIcon, ClockIcon, LockClosedIcon, ShieldCheckIcon, StarIcon, UserCircleIcon } from '@heroicons/react/24/solid'
 import { ZodiacWheel } from './Sky'
 import Logo from './Logo'
 import CountrySwitcher from './CountrySwitcher'
@@ -11,7 +11,7 @@ const fade = (delay = 0) => ({
   transition: { duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] },
 })
 
-export default function Intro({ focus, onStart, onSkip, onCountry }) {
+export default function Intro({ focus, onStart, onSkip, onCountry, onLogin }) {
   const { t } = useI18n()
   const k = focus ? `intro.byFocus.${focus}` : null
   const copy = {
@@ -24,10 +24,13 @@ export default function Intro({ focus, onStart, onSkip, onCountry }) {
     <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col px-5">
       <header className="flex items-center justify-between py-4 sm:py-6">
         <Logo />
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <span className="hidden items-center gap-2 text-xs text-white/50 sm:flex">
             <LockClosedIcon className="h-3.5 w-3.5" /> {t('common.secure')}
           </span>
+          <button onClick={onLogin} className="flex items-center gap-1.5 text-xs font-medium text-gold-300 hover:text-gold-200">
+            <UserCircleIcon className="h-4 w-4" /> {t('intro.login')}
+          </button>
           <CountrySwitcher onChange={onCountry} />
         </div>
       </header>

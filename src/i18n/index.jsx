@@ -7,6 +7,10 @@ import extraPt from './extra-pt'
 import extraEs from './extra-es'
 import extraEsAR from './extra-es-ar'
 import extraZh from './extra-zh'
+import extra2Pt from './extra2-pt'
+import extra2Es from './extra2-es'
+import extra2EsAR from './extra2-es-ar'
+import extra2Zh from './extra2-zh'
 
 // kind: como o pagamento é concluído — card | qr | voucher | transfer | push | redirect
 export const WALLETS = {
@@ -27,42 +31,46 @@ export const WALLETS = {
 export const COUNTRIES = {
   br: {
     name: 'Brasil', flag: 'BR', lang: 'pt', locale: 'pt-BR', currency: 'BRL', decimals: 2,
-    price: 27.9, from: 97.9, bump: 17.9, bumpFrom: 67.9, bonus: [47, 37], installments: 3,
+    price: 27.9, numBump: 19.9, numBumpFrom: 57.9, from: 97.9, bump: 17.9, bumpFrom: 67.9, bonus: [47, 37], installments: 3,
     phone: { code: '+55', min: 10, max: 11, placeholder: '(11) 99999-9999' },
     wallets: ['pix', 'card', 'mercadopago'],
     banks: [],
   },
   mx: {
     name: 'México', flag: 'MX', lang: 'es', locale: 'es-MX', currency: 'MXN', decimals: 0,
-    price: 149, from: 499, bump: 89, bumpFrom: 299, bonus: [249, 199], installments: 3,
+    price: 149, numBump: 99, numBumpFrom: 279, from: 499, bump: 89, bumpFrom: 299, bonus: [249, 199], installments: 3,
     phone: { code: '+52', min: 10, max: 10, placeholder: '55 1234 5678' },
     wallets: ['card', 'oxxo', 'spei', 'mercadopago'],
     banks: [],
   },
   co: {
     name: 'Colombia', flag: 'CO', lang: 'es', locale: 'es-CO', currency: 'COP', decimals: 0,
-    price: 34900, from: 119900, bump: 19900, bumpFrom: 69900, bonus: [59900, 49900], installments: 3,
+    price: 34900, numBump: 24900, numBumpFrom: 59900, from: 119900, bump: 19900, bumpFrom: 69900, bonus: [59900, 49900], installments: 3,
     phone: { code: '+57', min: 10, max: 10, placeholder: '300 123 4567' },
     wallets: ['nequi', 'pse', 'card', 'daviplata'],
     banks: ['Bancolombia', 'Banco de Bogotá', 'Davivienda', 'BBVA Colombia', 'Banco de Occidente', 'Banco Popular', 'Scotiabank Colpatria'],
   },
   ar: {
     name: 'Argentina', flag: 'AR', lang: 'es', variant: 'ar', locale: 'es-AR', currency: 'ARS', decimals: 0,
-    price: 14900, from: 49900, bump: 8900, bumpFrom: 29900, bonus: [24900, 19900], installments: 3,
+    price: 14900, numBump: 9900, numBumpFrom: 24900, from: 49900, bump: 8900, bumpFrom: 29900, bonus: [24900, 19900], installments: 3,
     phone: { code: '+54', min: 10, max: 11, placeholder: '11 1234 5678' },
     wallets: ['mercadopago', 'modo', 'card'],
     banks: [],
   },
   cn: {
     name: '中国', flag: 'CN', lang: 'zh', locale: 'zh-CN', currency: 'CNY', decimals: 0,
-    price: 39, from: 129, bump: 19, bumpFrom: 68, bonus: [68, 58], installments: 3,
+    price: 39, numBump: 25, numBumpFrom: 59, from: 129, bump: 19, bumpFrom: 68, bonus: [68, 58], installments: 3,
     phone: { code: '+86', min: 11, max: 11, placeholder: '138 0013 8000' },
     wallets: ['alipay', 'wechat', 'unionpay', 'card'],
     banks: [],
   },
 }
 
-const DICTS = { pt: merge(pt, extraPt), es: merge(es, extraEs), zh: merge(zh, extraZh) }
+const DICTS = {
+  pt: merge(merge(pt, extraPt), extra2Pt),
+  es: merge(merge(es, extraEs), extra2Es),
+  zh: merge(merge(zh, extraZh), extra2Zh),
+}
 
 function merge(base, over) {
   if (!over) return base
@@ -99,7 +107,7 @@ const I18n = createContext(null)
 export function I18nProvider({ country, gender, children }) {
   const value = useMemo(() => {
     const c = COUNTRIES[country]
-    const dict = c.variant === 'ar' ? merge(merge(DICTS.es, esAR), extraEsAR) : DICTS[c.lang]
+    const dict = c.variant === 'ar' ? merge(merge(merge(DICTS.es, esAR), extraEsAR), extra2EsAR) : DICTS[c.lang]
     const money = new Intl.NumberFormat(c.locale, {
       style: 'currency',
       currency: c.currency,

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import {
   ArrowRightIcon,
   CalendarDaysIcon,
+  CheckBadgeIcon,
   ExclamationTriangleIcon,
   HandRaisedIcon,
   LockClosedIcon,
@@ -12,7 +13,7 @@ import {
 } from '@heroicons/react/24/outline'
 import ChartWheel from './ChartWheel'
 import { highlights, SIGN_GLYPHS, SIGN_KEYS, signOf } from '../lib/astro'
-import { goldenDays, lifePath, nextMoonPhases, personalYear } from '../lib/forecast'
+import { expression, goldenDays, lifePath, nextMoonPhases, personalMonth, personalYear, soulUrge } from '../lib/forecast'
 import { useI18n } from '../i18n'
 
 const reveal = {
@@ -24,18 +25,20 @@ const reveal = {
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
-export default function FreeReport({ data, chart, onBuy }) {
-  const { t, c, money, lang } = useI18n()
+export default function FreeReport({ data, chart, orders = [], onBuy }) {
+  const { t, c, money } = useI18n()
   const focus = data.focus || 'espiritual'
   const focusShort = t(`focus.${focus}.short`)
   const name = (data.name || '').trim().split(/\s+/)[0]
-  const dot = lang === 'zh' ? '。' : '.'
 
   const forecast = useMemo(() => goldenDays(chart, focus), [chart, focus])
   const moons = useMemo(() => nextMoonPhases(), [])
   const lp = lifePath(data.birthDate)
   const year = new Date().getFullYear()
   const py = personalYear(data.birthDate, year)
+  const pm = personalMonth(data.birthDate)
+  const ex = expression(data.name)
+  const su = soulUrge(data.name)
   const list = highlights(chart)
 
   const fmtDay = (d, opts = { weekday: 'long', day: 'numeric', month: 'long' }) => d.toLocaleDateString(c.locale, opts)
@@ -69,7 +72,24 @@ export default function FreeReport({ data, chart, onBuy }) {
   const seenPct = 7 + (data.palm ? 1 : 0)
 
   return (
-    <section className="mx-auto max-w-3xl px-4 pb-10 pt-4 sm:px-5">
+    <section id="diagnostico" className="mx-auto max-w-3xl scroll-mt-28 px-4 pb-10 pt-4 sm:px-5">
+      {orders.length > 0 && (
+        <motion.div {...reveal} className="mb-5 rounded-3xl border border-emerald-400/30 bg-emerald-400/5 p-5">
+          <p className="flex items-center gap-2 font-semibold text-emerald-200">
+            <CheckBadgeIcon className="h-5 w-5" /> {t('area.ordersTitle')}
+          </p>
+          <ul className="mt-3 space-y-2 text-sm">
+            {orders.flatMap((o) => ['main', o.bump && 'bump', o.numBump && 'numBump'].filter(Boolean).map((k) => ({ k, at: o.at }))).map(({ k, at }, i) => (
+              <li key={i} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/[0.04] px-3 py-2">
+                <span className="font-medium">{t(`area.items.${k}`)}</span>
+                <span className="text-xs text-white/55">
+                  {t('area.orderStatus', { date: new Date(new Date(at).getTime() + 2 * 86400000).toLocaleDateString(c.locale, { day: 'numeric', month: 'short' }) })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      )}
       {/* Cabeçalho do documento */}
       <motion.div {...reveal} className="overflow-hidden rounded-3xl border border-gold-400/30 bg-gradient-to-b from-night-800 to-night-900">
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 text-[11px] uppercase tracking-widest text-gold-300/80">
@@ -103,7 +123,7 @@ export default function FreeReport({ data, chart, onBuy }) {
       </motion.div>
 
       {/* Leitura do foco */}
-      <Block icon={SparklesIcon} title={t('report.readingTitle', { focus: focusShort })}>
+      <Block id="diagnostico-leitura" icon={SparklesIcon} title={t('report.readingTitle', { focus: focusShort })}>
         <p className="text-sm text-white/60">{t(`focus.${focus}.text`)}</p>
         <div className="mt-4 space-y-3">
           {factors.map((f, i) => (
@@ -121,7 +141,7 @@ export default function FreeReport({ data, chart, onBuy }) {
       </Block>
 
       {/* Datas de ouro */}
-      <Block icon={CalendarDaysIcon} title={t('report.golden.title')} highlight>
+      <Block id="datas" icon={CalendarDaysIcon} title={t('report.golden.title')} highlight>
         <p className="text-sm text-white/60">{t('report.golden.sub')}</p>
         <div className="mt-4 space-y-3">
           {forecast.golden.map((d, i) => (
@@ -173,18 +193,37 @@ export default function FreeReport({ data, chart, onBuy }) {
       </Block>
 
       {/* Numerologia */}
-      <Block icon={StarIcon} title={t('report.numerology.title')}>
+      <Block id="numeros" icon={StarIcon} title={t('report.numerology.title')}>
         <div className="grid grid-cols-2 gap-3">
           {[
             [t('report.numerology.lifePath'), lp, t(`report.numerology.numbers.${lp}`)],
             [t('report.numerology.personalYear', { year }), py, t(`report.numerology.years.${py}`)],
-          ].map(([label, n, text]) => (
-            <motion.div key={label} {...reveal} className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10">
-              <p className="text-[11px] uppercase tracking-wider text-white/45">{label}</p>
-              <p className="mt-1 font-serif text-5xl font-semibold text-gradient-gold">{n}</p>
-              <p className="mt-2 text-sm leading-snug text-white/75">{text}</p>
-            </motion.div>
-          ))}
+            ex && [t('report.numerology.expression'), ex, `${t('report.numerology.expressionHint')}: ${t(`report.numerology.numbers.${ex}`)}`],
+            su && [t('report.numerology.soul'), su, `${t('report.numerology.soulHint')}: ${t(`report.numerology.numbers.${su}`)}`],
+            [t('report.numerology.personalMonth'), pm, t(`report.numerology.months.${pm}`)],
+          ]
+            .filter(Boolean)
+            .map(([label, n, text], i, arr) => (
+              <motion.div
+                key={label}
+                {...reveal}
+                className={`rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10 ${i === arr.length - 1 && arr.length % 2 ? 'col-span-2' : ''}`}
+              >
+                <p className="text-[11px] uppercase tracking-wider text-white/45">{label}</p>
+                <p className="mt-1 font-serif text-5xl font-semibold text-gradient-gold">{n}</p>
+                <p className="mt-2 text-sm leading-snug text-white/75">{text}</p>
+              </motion.div>
+            ))}
+        </div>
+        <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+          <p className="text-xs uppercase tracking-widest text-gold-300/80">{t('report.numerology.lockedTitle')}</p>
+          <ul className="mt-2 grid grid-cols-2 gap-2 text-sm text-white/60">
+            {t('report.numerology.locked').map((x) => (
+              <li key={x} className="flex items-center gap-1.5">
+                <LockClosedIcon className="h-3.5 w-3.5 shrink-0 text-gold-400" /> {x}
+              </li>
+            ))}
+          </ul>
         </div>
       </Block>
 
@@ -227,7 +266,7 @@ export default function FreeReport({ data, chart, onBuy }) {
       </Block>
 
       {/* Caminho */}
-      <Block icon={ArrowRightIcon} title={t('report.path.title')} highlight>
+      <Block id="caminho" icon={ArrowRightIcon} title={t('report.path.title')} highlight>
         <p className="text-sm text-white/60">{t('report.path.sub')}</p>
         <ol className="relative mt-5 space-y-5 border-l border-gold-400/30 pl-6">
           {[step1, step2, step3].filter(Boolean).map((s, i) => (
@@ -259,14 +298,13 @@ export default function FreeReport({ data, chart, onBuy }) {
         </button>
         <p className="mt-2 text-center text-sm text-white/50">{t('sales.priceLine', { from: money(c.from), price: money(c.price) })}</p>
       </motion.div>
-      <span className="hidden">{dot}</span>
     </section>
   )
 }
 
-function Block({ icon: Icon, title, children, highlight }) {
+function Block({ id, icon: Icon, title, children, highlight }) {
   return (
-    <motion.div {...reveal} className={`mt-6 rounded-3xl p-5 ${highlight ? 'border border-gold-400/25 bg-night-900/80' : 'glass'}`}>
+    <motion.div id={id} {...reveal} className={`mt-6 scroll-mt-28 rounded-3xl p-5 ${highlight ? 'border border-gold-400/25 bg-night-900/80' : 'glass'}`}>
       <h2 className="mb-3 flex items-center gap-2 font-serif text-2xl font-semibold leading-tight">
         <Icon className="h-5 w-5 shrink-0 text-gold-300" />
         {title}

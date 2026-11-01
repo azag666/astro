@@ -4,6 +4,7 @@ import {
   AcademicCapIcon,
   ArrowPathRoundedSquareIcon,
   ArrowRightIcon,
+  ArrowRightOnRectangleIcon,
   BookOpenIcon,
   CpuChipIcon,
   MapPinIcon,
@@ -44,7 +45,7 @@ const reveal = {
 const CHAPTER_ICONS = [LightBulbIcon, ScaleIcon, ArrowPathRoundedSquareIcon, AcademicCapIcon]
 
 
-export default function SalesPage({ data, onBuy, onCountry }) {
+export default function SalesPage({ data, account, onBuy, onCountry, onLogout }) {
   const { t, money, c } = useI18n()
   const { scrollY } = useScroll()
   const [scrolled, setScrolled] = useState(false)
@@ -57,7 +58,7 @@ export default function SalesPage({ data, onBuy, onCountry }) {
 
   return (
     <div className="relative">
-      <header className={`sticky top-0 z-40 transition-all duration-500 ${scrolled ? 'border-b border-white/10 bg-night-950/75 backdrop-blur-xl' : ''}`}>
+      <header className={`sticky top-0 z-40 transition-all duration-500 ${scrolled || account ? 'border-b border-white/10 bg-night-950/75 backdrop-blur-xl' : ''}`}>
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
           <Logo />
           <div className="flex items-center gap-3">
@@ -74,16 +75,19 @@ export default function SalesPage({ data, onBuy, onCountry }) {
                 </motion.button>
               )}
             </AnimatePresence>
-            <CountrySwitcher onChange={onCountry} />
+            {account ? <AccountChip name={data.name} onLogout={onLogout} /> : <CountrySwitcher onChange={onCountry} />}
           </div>
         </div>
+        {account && chart && <MemberTabs />}
       </header>
 
-      {chart ? <FreeReport data={data} chart={chart} onBuy={onBuy} /> : <GenericHero onBuy={onBuy} />}
+      {chart ? <FreeReport data={data} chart={chart} orders={account?.orders || []} onBuy={onBuy} /> : <GenericHero onBuy={onBuy} />}
       <TrustBar />
       <Engine />
       <WhatYouGet />
-      <Stack focus={data.focus || 'espiritual'} onBuy={onBuy} />
+      <div id="pacote" className="scroll-mt-28">
+        <Stack focus={data.focus || 'espiritual'} onBuy={onBuy} />
+      </div>
       <Bonuses />
       <HowItWorks quizDone={!!chart} />
       <Testimonials />
@@ -108,6 +112,58 @@ export default function SalesPage({ data, onBuy, onCountry }) {
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+function AccountChip({ name, onLogout }) {
+  const { t } = useI18n()
+  const [open, setOpen] = useState(false)
+  const first = (name || '').trim().split(/\s+/)[0]
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 rounded-full border border-gold-400/40 bg-gold-400/10 py-1 pl-1 pr-3 text-xs font-medium text-gold-200">
+        <span className="grid h-7 w-7 place-items-center rounded-full bg-gold-400 text-sm font-bold text-night-950">{first[0]?.toUpperCase()}</span>
+        {t('area.myArea')}
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="absolute right-0 z-50 mt-2 w-48 rounded-2xl border border-white/10 bg-night-900/95 p-2 backdrop-blur-xl"
+          >
+            <p className="px-3 py-2 text-sm font-semibold">{t('area.hello', { name: first })}</p>
+            <button onClick={onLogout} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-white/70 hover:bg-white/5">
+              <ArrowRightOnRectangleIcon className="h-4 w-4" /> {t('area.logout')}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function MemberTabs() {
+  const { t } = useI18n()
+  const tabs = t('area.tabs')
+  const ids = { report: 'diagnostico', golden: 'datas', numbers: 'numeros', path: 'caminho', offer: 'pacote' }
+  return (
+    <nav className="no-scrollbar mx-auto flex max-w-3xl gap-2 overflow-x-auto px-4 pb-3">
+      {Object.entries(tabs).map(([k, label]) => (
+        <a
+          key={k}
+          href={`#${ids[k]}`}
+          onClick={(e) => {
+            e.preventDefault()
+            document.getElementById(ids[k])?.scrollIntoView({ behavior: 'smooth' })
+          }}
+          className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-medium ring-1 transition ${k === 'offer' ? 'bg-gold-400 text-night-950 ring-gold-400' : 'bg-white/5 text-white/75 ring-white/10 hover:bg-white/10'}`}
+        >
+          {label}
+        </a>
+      ))}
+    </nav>
   )
 }
 

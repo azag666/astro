@@ -7,6 +7,8 @@ import Analyzing from './components/Analyzing'
 import SalesPage from './components/SalesPage'
 import Checkout from './components/Checkout'
 import Success from './components/Success'
+import Login from './components/Login'
+import { addOrder, currentAccount, login as loginAccount, logout, saveAccount } from './lib/account'
 import { COUNTRIES, detectCountry, I18nProvider } from './i18n'
 
 const EMPTY = {
@@ -24,9 +26,10 @@ const EMPTY = {
   palm: null,
   email: '',
   phone: '',
+  consent: false,
 }
 
-const SCREENS = ['intro', 'quiz', 'analyzing', 'offer', 'checkout', 'success']
+const SCREENS = ['intro', 'login', 'quiz', 'analyzing', 'offer', 'checkout', 'success']
 
 // Campanhas: ?f=amor|dinheiro|carreira|espiritual já define a dor do lead
 const FOCUSES = ['amor', 'dinheiro', 'carreira', 'espiritual']
@@ -52,6 +55,7 @@ export default function App() {
     }
   })
   const [order, setOrder] = useState(null)
+  const [account, setAccount] = useState(currentAccount)
 
   useEffect(() => {
     sessionStorage.setItem('ceu-natal', JSON.stringify(data))
@@ -81,10 +85,44 @@ export default function App() {
       <Starfield />
       <AnimatePresence mode="wait">
         <motion.main key={screen} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
-          {screen === 'intro' && <Intro focus={URL_FOCUS || data.focus} onStart={() => go('quiz')} onSkip={toOffer} onCountry={setCountry} />}
-          {screen === 'quiz' && <Quiz focusLocked={!!URL_FOCUS} data={data} setData={setData} onDone={() => go('analyzing')} />}
+          {screen === 'intro' && (
+            <Intro focus={URL_FOCUS || data.focus} onStart={() => go('quiz')} onSkip={toOffer} onCountry={setCountry} onLogin={() => (account ? toOffer() : go('login'))} />
+          )}
+          {screen === 'login' && (
+            <Login
+              onBack={() => go('intro')}
+              onStart={() => go('quiz')}
+              onLogin={(acc) => {
+                loginAccount(acc)
+                setAccount(acc)
+                setData({ ...EMPTY, ...acc.data })
+                if (acc.country) setCountry(acc.country)
+                toOffer()
+              }}
+            />
+          )}
+          {screen === 'quiz' && (
+            <Quiz focusLocked={!!URL_FOCUS} data={data} setData={setData} onDone={() => {
+                setAccount(saveAccount(data, country))
+                go('analyzing')
+              }}
+            />
+          )}
           {screen === 'analyzing' && <Analyzing name={data.name} hasPalm={!!data.palm} onDone={toOffer} />}
-          {screen === 'offer' && <SalesPage data={data} onBuy={() => go('checkout')} onCountry={setCountry} />}
+          {screen === 'offer' && (
+            <SalesPage
+              data={data}
+              account={account}
+              onBuy={() => go('checkout')}
+              onCountry={setCountry}
+              onLogout={() => {
+                logout()
+                setAccount(null)
+                setData(EMPTY)
+                go('intro')
+              }}
+            />
+          )}
           {screen === 'checkout' && (
             <Checkout
               key={country}
@@ -93,6 +131,8 @@ export default function App() {
               onBack={toOffer}
               onPaid={(o) => {
                 setOrder(o)
+                addOrder(o)
+                setAccount(currentAccount())
                 go('success')
               }}
             />

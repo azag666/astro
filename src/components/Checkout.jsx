@@ -25,6 +25,7 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
   const { t, money, c, country, walletName, walletNote } = useI18n()
   const [method, setMethod] = useState(c.wallets[0])
   const [bump, setBump] = useState(false)
+  const [numBump, setNumBump] = useState(false)
   const [touched, setTouched] = useState(false)
   const [stage, setStage] = useState('form')
   const [bank, setBank] = useState('')
@@ -32,7 +33,7 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
   const fromQuiz = !!data.birthDate && !!data.place
   const kind = WALLETS[method].kind
 
-  const total = c.price + (bump ? c.bump : 0)
+  const total = c.price + (bump ? c.bump : 0) + (numBump ? c.numBump : 0)
   const signIdx = quickSunSign(data.birthDate)
   const phoneDigits = data.phone.replace(/\D/g, '')
 
@@ -59,7 +60,7 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
     if (Object.keys(errors).length) return
     if (kind === 'card') {
       setStage('processing')
-      setTimeout(() => onPaid({ total, bump }), 1800)
+      setTimeout(() => onPaid({ total, bump, numBump }), 1800)
     } else {
       setStage('pending')
       window.scrollTo({ top: 0 })
@@ -93,7 +94,7 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
             email={data.email}
             phone={`${c.phone.code} ${data.phone}`}
             bank={bank}
-            onPaid={() => onPaid({ total, bump })}
+            onPaid={() => onPaid({ total, bump, numBump })}
             onBack={() => setStage('form')}
           />
         ) : (
@@ -192,6 +193,7 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
               </Card>
 
               <Bump checked={bump} onChange={setBump} />
+              <Bump k="numBump" checked={numBump} onChange={setNumBump} />
 
               <button type="submit" disabled={stage === 'processing'} className="btn-gold w-full py-5 text-lg">
                 {stage === 'processing' ? (
@@ -236,8 +238,13 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
                   <Row label={t('checkout.lineMain')} value={<><s className="mr-2 text-white/35">{money(c.from)}</s>{money(c.price)}</>} />
                   <AnimatePresence>
                     {bump && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+                      <motion.div key="b" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                         <Row label={t('checkout.lineBump')} value={money(c.bump)} />
+                      </motion.div>
+                    )}
+                    {numBump && (
+                      <motion.div key="nb" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+                        <Row label={t('checkout.lineNumBump')} value={money(c.numBump)} />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -304,8 +311,10 @@ function WalletTab({ active, onClick, color, label, note }) {
   )
 }
 
-function Bump({ checked, onChange }) {
+function Bump({ k = 'bump', checked, onChange }) {
   const { t, money, c } = useI18n()
+  const price = k === 'bump' ? c.bump : c.numBump
+  const from = k === 'bump' ? c.bumpFrom : c.numBumpFrom
   return (
     <motion.label
       animate={checked ? { scale: [1, 1.02, 1] } : {}}
@@ -317,12 +326,12 @@ function Bump({ checked, onChange }) {
           {checked && <CheckIcon className="h-4 w-4 text-night-950" strokeWidth={3} />}
         </span>
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-gold-300">{t('bump.yes')}</p>
-          <p className="mt-1 font-semibold">{t('bump.title')}</p>
-          <p className="mt-1 text-sm text-white/60">{t('bump.text')}</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gold-300">{t(`${k}.yes`)}</p>
+          <p className="mt-1 font-semibold">{t(`${k}.title`)}</p>
+          <p className="mt-1 text-sm text-white/60">{t(`${k}.text`)}</p>
           <p className="mt-2 text-sm">
-            <s className="text-white/40">{money(c.bumpFrom)}</s>
-            <span className="ml-2 font-semibold text-gold-300">+ {money(c.bump)}</span>
+            <s className="text-white/40">{money(from)}</s>
+            <span className="ml-2 font-semibold text-gold-300">+ {money(price)}</span>
           </p>
         </div>
       </div>
