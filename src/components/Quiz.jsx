@@ -13,12 +13,10 @@ import {
   MoonIcon,
   BookOpenIcon,
   BriefcaseIcon,
-  CalendarDaysIcon,
   ChartBarIcon,
   CheckIcon,
   DevicePhoneMobileIcon,
   KeyIcon,
-  ClockIcon,
   EnvelopeIcon,
   ExclamationTriangleIcon,
   FaceFrownIcon,
@@ -41,6 +39,7 @@ import { useI18n } from '../i18n'
 import CitySearch from './CitySearch'
 import PalmScan from './PalmScan'
 import { track } from '../lib/track'
+import { DateSelect, TimeSelect } from './DateSelect'
 
 const ICONS = {
   gender: { f: UserIcon, m: UserIcon, n: UsersIcon },
@@ -142,16 +141,7 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
       content = (
         <Form onSubmit={() => data.birthDate && next()}>
           <Title title={t('quiz.birthDate.title', { name: firstName(data.name) })} hint={t('quiz.birthDate.hint')} />
-          <Field icon={CalendarDaysIcon}>
-            <input
-              type="date"
-              min="1920-01-01"
-              max={TODAY}
-              className="field pl-12 [color-scheme:dark]"
-              value={data.birthDate}
-              onChange={(e) => set({ birthDate: e.target.value })}
-            />
-          </Field>
+          <DateSelect value={data.birthDate} onChange={(birthDate) => set({ birthDate })} />
           <AnimatePresence>
             {signKey && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
@@ -183,15 +173,7 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
       content = (
         <Form onSubmit={() => (data.birthTime || data.unknownTime) && next()}>
           <Title title={t('quiz.birthTime.title')} hint={t('quiz.birthTime.hint')} />
-          <Field icon={ClockIcon}>
-            <input
-              type="time"
-              disabled={data.unknownTime}
-              className="field pl-12 [color-scheme:dark] disabled:opacity-40"
-              value={data.birthTime}
-              onChange={(e) => set({ birthTime: e.target.value })}
-            />
-          </Field>
+          <TimeSelect key={data.unknownTime ? 'off' : 'on'} disabled={data.unknownTime} value={data.birthTime} onChange={(birthTime) => set({ birthTime })} />
           <label className="mt-3 flex cursor-pointer items-center gap-3 px-1 text-sm text-white/60">
             <input type="checkbox" className="h-4 w-4 accent-gold-400" checked={data.unknownTime} onChange={(e) => set({ unknownTime: e.target.checked, birthTime: '' })} />
             {t('quiz.birthTime.unknown')}
@@ -333,7 +315,6 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
   )
 }
 
-const TODAY = new Date().toISOString().slice(0, 10)
 const firstName = (n) => (n || '').trim().split(/\s+/)[0]
 
 function Title({ title, hint }) {

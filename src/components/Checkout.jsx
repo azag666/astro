@@ -26,6 +26,7 @@ import { useI18n, WALLETS } from '../i18n'
 import { htMethod } from '../i18n/paises.js'
 import { sid, track, utm } from '../lib/track'
 import QRCode from 'qrcode'
+import { DateSelect, TimeSelect } from './DateSelect'
 
 const ORDER_KEY = 'ceu-natal-pedido'
 
@@ -257,8 +258,13 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null 
                   </div>
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-3">
-                    <Input icon={CalendarDaysIcon} type="date" value={data.birthDate} onChange={set('birthDate')} error={err('birthDate')} className="[&_input]:[color-scheme:dark]" />
-                    <Input icon={ClockIcon} type="time" value={data.birthTime} onChange={set('birthTime')} disabled={data.unknownTime} className="[&_input]:[color-scheme:dark]" />
+                    <div className="sm:col-span-3">
+                      <DateSelect value={data.birthDate} onChange={(birthDate) => setData((d) => ({ ...d, birthDate }))} />
+                      {err('birthDate') && <p className="mt-1 pl-1 text-xs text-rose-300">{errors.birthDate}</p>}
+                    </div>
+                    <div className="sm:col-span-3">
+                      <TimeSelect disabled={data.unknownTime} value={data.birthTime} onChange={(birthTime) => setData((d) => ({ ...d, birthTime }))} />
+                    </div>
                     <Input icon={MapPinIcon} placeholder={t('checkout.city')} value={data.cityText || ''} onChange={set('cityText')} error={err('city')} />
                   </div>
                 )}

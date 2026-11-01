@@ -78,6 +78,24 @@ export function resumoDoFunil(dir, pedidos, { de, ate, country, campaign } = {})
   }
 }
 
+const PROS = { helena: 'Helena (astróloga)', marina: 'Marina (taróloga)', sofia: 'Sofia (numeróloga)', luna: 'Luna (amor e relacionamentos)', clara: 'Clara (carreira e dinheiro)' }
+
+function blocoPerguntas(lista, k) {
+  if (!lista.length) return ''
+  const abertas = lista.filter((q) => q.status === 'aguardando').length
+  const itens = lista
+    .slice(0, 200)
+    .map(
+      (q) => `<div class="card pergunta"><div class="sub">${esc(q.createdAt.slice(0, 16).replace('T', ' '))} UTC · ${esc(q.country)} · ${esc(PROS[q.proId] || q.proId)} · ${esc(q.name)}${q.profile?.name ? ` · sobre ${esc(q.profile.name)} (${esc(q.profile.birthDate)} ${esc(q.profile.birthTime || '')} ${esc(q.profile.place?.name || '')})` : ''}</div>
+<p><b>${esc(q.question)}</b></p>
+<form method="post" onsubmit="event.preventDefault();fetch('/api/painel/responder?k=${k}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:'${esc(q.id)}',answer:this.a.value})}).then(r=>r.ok?location.reload():alert('erro'))">
+<textarea name="a" rows="4" style="width:100%;box-sizing:border-box" placeholder="Resposta">${esc(q.answer || '')}</textarea>
+<button>${q.status === 'respondida' ? 'Atualizar resposta' : 'Responder'}</button></form></div>`,
+    )
+    .join('')
+  return `<h2>Perguntas aos profissionais (${abertas} aguardando)</h2>${itens}`
+}
+
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 const pct = (a, b) => (b ? `${Math.round((a / b) * 1000) / 10}%` : '—')
 
@@ -90,7 +108,7 @@ function tabelaFunil(titulo, grupos) {
   return `<h2>${esc(titulo)}</h2><div class="scroll"><table><tr><th></th>${cab}<th>Conversão</th></tr>${linhas || '<tr><td colspan="10">Sem dados</td></tr>'}</table></div>`
 }
 
-export function painelHtml(r, params) {
+export function painelHtml(r, params, perguntas = []) {
   const k = esc(params.get('k') || '')
   const maior = Math.max(1, r.funil.view || 0)
   const barras = PASSOS.map(([key, nome], i) => {
@@ -120,6 +138,7 @@ table{border-collapse:collapse;width:100%;background:#fff;border-radius:12px;ove
 th,td{padding:8px 10px;border-bottom:1px solid #f0f0f3;text-align:left;white-space:nowrap}th{font-weight:600;font-size:12px;color:#6e6e73}
 small{display:block;color:#86868b;font-size:11px}.scroll{overflow-x:auto}
 .kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}.kpi{background:#fff;border-radius:12px;padding:12px 16px;min-width:150px}.kpi b{display:block;font-size:20px}
+.pergunta{margin:10px 0}.pergunta p{margin:8px 0}textarea{font:inherit;padding:8px;border:1px solid #d2d2d7;border-radius:8px}
 @media(max-width:640px){.passo{grid-template-columns:1fr 50px 50px}.barra{display:none}}
 </style></head><body><main>
 <h1>Funil do Céu Natal</h1>
@@ -134,6 +153,7 @@ ${tabelaFunil('Por país', r.porPais)}
 ${tabelaFunil('Por campanha (utm_campaign)', r.porCampanha)}
 <h2>Onde o quiz perde gente</h2><table><tr><th>Pergunta</th><th>Pessoas</th></tr>${quiz || '<tr><td colspan="2">Sem dados</td></tr>'}</table>
 <h2>Métodos de pagamento</h2><table><tr><th>País/método</th><th>Cobranças</th><th>Pagas</th><th>Taxa</th></tr>${metodos || '<tr><td colspan="4">Sem dados</td></tr>'}</table>
+${blocoPerguntas(perguntas, k)}
 ${erros ? `<h2>Falhas ao gerar cobrança</h2><table><tr><th>País/método: erro</th><th>Vezes</th></tr>${erros}</table>` : ''}
 </main></body></html>`
 }

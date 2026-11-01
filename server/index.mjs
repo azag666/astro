@@ -37,6 +37,23 @@ if (existsSync(ARQ_PEDIDOS)) {
     } catch {}
   }
 }
+// Perguntas aos profissionais: a última linha de cada id vale (resposta entra como nova linha)
+const perguntas = new Map()
+const ARQ_PERGUNTAS = join(DATA, 'perguntas.jsonl')
+if (existsSync(ARQ_PERGUNTAS)) {
+  for (const linha of readFileSync(ARQ_PERGUNTAS, 'utf8').split('\n')) {
+    if (!linha) continue
+    try {
+      const q = JSON.parse(linha)
+      perguntas.set(q.id, q)
+    } catch {}
+  }
+}
+function salvarPergunta(q) {
+  perguntas.set(q.id, q)
+  gravar('perguntas.jsonl', q)
+}
+
 function salvarPedido(p) {
   p.updatedAt = new Date().toISOString()
   pedidos.set(p.id, p)
@@ -129,7 +146,7 @@ function marcarPago(p, paidAt) {
   p.status = 'paid'
   p.paidAt = paidAt || new Date().toISOString()
   salvarPedido(p)
-  gravar(`eventos-${hoje()}.jsonl`, { t: Date.now(), sid: p.sid, ev: 'paid', country: p.country, focus: p.focus, utm: p.utm, props: { method: p.wallet, total: p.total, currency: p.currency, bump: p.bump, numBump: p.numBump } })
+  gravar(`eventos-${hoje()}.jsonl`, { t: Date.now(), sid: p.sid, ev: 'paid', country: p.country, focus: p.focus, utm: p.utm, props: { method: p.wallet, total: p.total, currency: p.currency, product: p.product || 'mapa', offer: p.offer || '', pack: p.pack || 0, bump: p.bump, numBump: p.numBump } })
 }
 
 // ---------- Proteção contra abuso de cobranças ----------
@@ -150,14 +167,18 @@ function podeCobrar(ip) {
 
 async function criarPedido(req, corpo) {
   const { sid, country, wallet, bump, numBump, customer = {}, utm = {}, focus } = corpo
+  const product = corpo.product === 'perguntas' ? 'perguntas' : 'mapa'
+  const offer = ['back', 'up', 'down'].includes(corpo.offer) ? corpo.offer : ''
+  const pack = Number(corpo.pack) || 0
   const c = COUNTRIES[country]
   if (!c || !c.wallets.includes(wallet)) return [400, { error: 'invalid_method' }]
   const method = htMethod(wallet, c.currency)
   if (!method) return [400, { error: 'invalid_method' }]
-  const valor = orderTotal(country, { bump: !!bump, numBump: !!numBump })
+  const valor = orderTotal(country, { product, offer, pack, bump: product === 'mapa' && !!bump, numBump: product === 'mapa' && !!numBump })
+  if (!valor) return [400, { error: 'invalid_product' }]
 
   const aberto = [...pedidos.values()].find(
-    (p) => p.sid === sid && p.status === 'pending' && p.wallet === wallet && (p.profile?.id || null) === (corpo.profile?.id || null) && p.cents === valor.cents && p.currency === valor.currency && Date.now() - Date.parse(p.createdAt) < 30 * 60e3 && p.payment,
+    (p) => p.sid === sid && p.status === 'pending' && p.wallet === wallet && (p.profile?.id || null) === (corpo.profile?.id || null) && p.cents === valor.cents && p.currency === valor.currency && p.product === product && Date.now() - Date.parse(p.createdAt) < 30 * 60e3 && p.payment,
   )
   if (aberto) return [200, publico(aberto)]
 
@@ -169,6 +190,9 @@ async function criarPedido(req, corpo) {
     country,
     wallet,
     method,
+    product,
+    offer,
+    pack,
     currency: valor.currency,
     total: valor.total,
     cents: valor.cents,
@@ -200,7 +224,7 @@ async function criarPedido(req, corpo) {
     p.payment = ch.payment || { method, kind: ch.checkout_url ? 'redirect' : ch.clabe ? 'bank_transfer' : 'copy_paste', instructions: { copy_paste: ch.copy_paste, clabe: ch.clabe, checkout_url: ch.checkout_url } }
     p.expiresAt = ch.expires_at || p.payment.expires_at || null
     salvarPedido(p)
-    gravar(`eventos-${hoje()}.jsonl`, { t: Date.now(), sid: p.sid, ev: 'charge_created', country, focus: p.focus, utm: p.utm, props: { method: wallet, total: p.total } })
+    gravar(`eventos-${hoje()}.jsonl`, { t: Date.now(), sid: p.sid, ev: 'charge_created', country, focus: p.focus, utm: p.utm, props: { method: wallet, total: p.total, product, offer, pack } })
     return [200, publico(p)]
   } catch (e) {
     gravar(`eventos-${hoje()}.jsonl`, { t: Date.now(), sid: p.sid, ev: 'charge_error', country, focus: p.focus, utm: p.utm, props: { method: wallet, code: e.code } })
@@ -217,7 +241,7 @@ function urlDeVolta(req, p) {
 }
 
 function publico(p) {
-  return { id: p.id, status: p.status, wallet: p.wallet, total: p.total, currency: p.currency, payment: p.payment, expiresAt: p.expiresAt, simulado: SIMULADO }
+  return { id: p.id, status: p.status, product: p.product || 'mapa', pack: p.pack || 0, offer: p.offer || '', wallet: p.wallet, total: p.total, currency: p.currency, payment: p.payment, expiresAt: p.expiresAt, simulado: SIMULADO }
 }
 
 function limparUtm(u = {}) {
@@ -355,12 +379,56 @@ createServer(async (req, res) => {
       return json(res, 200, publico(p))
     }
 
+    if (url.pathname === '/api/perguntas' && req.method === 'POST') {
+      const b = await lerCorpo(req, 32 * 1024)
+      const p = pedidos.get(String(b.orderId || ''))
+      if (!p || p.product !== 'perguntas' || p.status !== 'paid' || p.sid !== String(b.sid || '')) return json(res, 403, { error: 'not_allowed' })
+      const usadas = [...perguntas.values()].filter((q) => q.orderId === p.id).length
+      const novas = (Array.isArray(b.questions) ? b.questions : []).map((x) => String(x || '').trim().slice(0, 1200)).filter(Boolean)
+      if (!novas.length || usadas + novas.length > p.pack) return json(res, 400, { error: 'too_many', restantes: p.pack - usadas })
+      for (const texto of novas) {
+        salvarPergunta({
+          id: randomUUID().replace(/-/g, '').slice(0, 16),
+          orderId: p.id,
+          sid: p.sid,
+          country: p.country,
+          proId: String(b.proId || '').slice(0, 30),
+          profile: limparPerfil(b.profile) || null,
+          name: p.customer?.name || '',
+          question: texto,
+          status: 'aguardando',
+          createdAt: new Date().toISOString(),
+        })
+      }
+      gravar(`eventos-${hoje()}.jsonl`, { t: Date.now(), sid: p.sid, ev: 'questions_sent', country: p.country, utm: p.utm, props: { n: novas.length, pro: String(b.proId || '').slice(0, 30) } })
+      return json(res, 200, { ok: true, restantes: p.pack - usadas - novas.length })
+    }
+
+    if (url.pathname === '/api/perguntas' && req.method === 'GET') {
+      const sid = url.searchParams.get('sid') || ''
+      if (!sid) return json(res, 400, { error: 'sid' })
+      const lista = [...perguntas.values()].filter((q) => q.sid === sid).map(({ id, orderId, proId, question, status, answer, answeredAt, createdAt, profile }) => ({ id, orderId, proId, question, status, answer, answeredAt, createdAt, profileName: profile?.name || null }))
+      const creditos = [...pedidos.values()]
+        .filter((p) => p.sid === sid && p.product === 'perguntas' && p.status === 'paid')
+        .map((p) => ({ orderId: p.id, pack: p.pack, restantes: p.pack - lista.filter((q) => q.orderId === p.id).length }))
+      return json(res, 200, { perguntas: lista, creditos })
+    }
+
+    if (url.pathname === '/api/painel/responder' && req.method === 'POST') {
+      if (!PAINEL_TOKEN || url.searchParams.get('k') !== PAINEL_TOKEN) return json(res, 404, { error: 'not_found' })
+      const b = await lerCorpo(req, 64 * 1024)
+      const q = perguntas.get(String(b.id || ''))
+      if (!q) return json(res, 404, { error: 'not_found' })
+      salvarPergunta({ ...q, answer: String(b.answer || '').slice(0, 8000), status: 'respondida', answeredAt: new Date().toISOString() })
+      return json(res, 200, { ok: true })
+    }
+
     if (url.pathname === '/painel' || url.pathname === '/api/painel') {
       if (!PAINEL_TOKEN || url.searchParams.get('k') !== PAINEL_TOKEN) return json(res, 404, { error: 'not_found' })
       const resumo = resumoDoFunil(DATA, pedidos, { de: url.searchParams.get('de'), ate: url.searchParams.get('ate'), country: url.searchParams.get('pais'), campaign: url.searchParams.get('campanha') })
       if (url.pathname === '/api/painel') return json(res, 200, resumo)
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' })
-      res.end(painelHtml(resumo, url.searchParams))
+      res.end(painelHtml(resumo, url.searchParams, [...perguntas.values()].sort((a, b) => (a.status === b.status ? a.createdAt.localeCompare(b.createdAt) : a.status === 'aguardando' ? -1 : 1))))
       return
     }
 
