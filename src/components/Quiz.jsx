@@ -39,6 +39,7 @@ import { useI18n } from '../i18n'
 import CitySearch from './CitySearch'
 import PalmScan from './PalmScan'
 import { track } from '../lib/track'
+import { guessGender } from '../lib/gender'
 import { DateSelect, TimeSelect } from './DateSelect'
 import { capitalPlace } from '../lib/astro'
 
@@ -192,7 +193,7 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
             <div>
               <Label>{t('quiz.dados.name')}</Label>
               <Field icon={UserIcon}>
-                <input autoFocus autoComplete="given-name" className="field pl-12" placeholder={t('quiz.name.placeholder')} value={data.name} onChange={(e) => set({ name: e.target.value })} />
+                <input autoFocus autoComplete="given-name" className="field pl-12" placeholder={t('quiz.name.placeholder')} value={data.name} onChange={(e) => set({ name: e.target.value, gender: guessGender(e.target.value) || '' })} />
               </Field>
             </div>
             <div>

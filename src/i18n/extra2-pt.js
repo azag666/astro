@@ -29,7 +29,7 @@ export default {
     logout: 'Sair',
     tabs: { report: 'Diagnóstico', golden: 'Datas de ouro', numbers: 'Números', path: 'Caminho', offer: 'Meu pacote' },
     ordersTitle: 'Seus pedidos',
-    orderStatus: 'Em preparação · entrega até {date}',
+    orderStatus: 'Enviado no seu e-mail',
     items: { main: 'Mapa Astral Completo', bump: 'Revolução Solar', numBump: 'Mapa Numerológico Completo' },
   },
   report: {

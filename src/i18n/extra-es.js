@@ -2,7 +2,7 @@
 // Se fusiona encima del diccionario base. Mismos tokens: {var} y {masc|fem}.
 export default {
   focus: {
-    amor: { label: 'Amor y relaciones', short: 'amor', text: 'Venus, Marte y tu Casa 7 muestran cómo amas, a quién atraes y por qué el mismo patrón vuelve una y otra vez.' },
+    amor: { label: 'Amor y relaciones', short: 'amor', text: 'Tu Venus muestra cómo amas. Tu Marte, quién te atrae. Y tu Casa 7 guarda el tipo de persona que se queda, y el motivo de que el mismo patrón vuelva.' },
     dinheiro: { label: 'Dinero y prosperidad', short: 'dinero', text: 'Júpiter, Venus y tu Casa 2 muestran de dónde viene tu dinero, por dónde se te escapa y cuándo llega.' },
     carreira: { label: 'Carrera y propósito profesional', short: 'carrera', text: 'Tu Medio Cielo, Saturno y Marte revelan tu verdadera vocación y lo que está frenando tu crecimiento.' },
     espiritual: { label: 'Salud espiritual y camino de vida', short: 'camino espiritual', text: 'Tu Luna, Neptuno y tu Sol muestran lo que tu alma vino a vivir y por qué a veces te sientes perdid{o|a}.' },
@@ -10,7 +10,7 @@ export default {
 
   intro: {
     byFocus: {
-      amor: { badge: 'Lectura amorosa gratis', title: 'No es mala suerte en el amor.', accent: 'Es un patrón escrito en tu cielo.', sub: 'Descubre por qué siempre atraes al mismo tipo de persona, qué te pide tu Venus y cuáles son tus 3 días más magnéticos de los próximos 30 días.' },
+      amor: { badge: 'Lectura amorosa gratis', title: 'No es mala suerte en el amor.', accent: 'Es un patrón escrito en tu cielo.', sub: 'Descubre por qué siempre atraes al mismo tipo de persona, con quién combinas de verdad y cuáles son tus 3 días más magnéticos de los próximos 30 días.' },
       dinheiro: { badge: 'Diagnóstico financiero gratis', title: 'El dinero tiene su momento exacto para llegar.', accent: 'Tu carta astral sabe cuál es.', sub: 'Mira de dónde viene tu prosperidad, por dónde se te escapa el dinero y tus 3 fechas de oro financieras de los próximos 30 días, calculadas con la posición real de los planetas.' },
       carreira: { badge: 'Diagnóstico de carrera gratis', title: 'No estás en el lugar equivocado por casualidad.', accent: 'Tu carta astral te muestra hacia dónde ir.', sub: 'Descubre tu verdadera vocación según tu Medio Cielo, qué frena tu crecimiento y los 3 mejores días para actuar en los próximos 30 días.' },
       espiritual: { badge: 'Lectura espiritual gratis', title: 'Ese vacío tiene dirección.', accent: 'Y tu carta astral sabe cuál es.', sub: 'Entiende lo que tu alma vino a vivir, por qué te sientes desconectad{o|a} y qué días del próximo mes te abren puertas.' },
@@ -27,7 +27,7 @@ export default {
     },
     insight: {
       eyebrow: 'Esto tiene explicación',
-      amor: 'Los patrones en el amor casi nunca son mala suerte. En la carta astral aparecen en la posición de Venus, de Marte y de tu Casa 7. Cuando entiendes lo que te piden, el patrón pierde su fuerza.',
+      amor: 'Los patrones en el amor casi nunca son mala suerte. Aparecen en la posición de tu Venus, de tu Marte y de tu Casa 7. En un momento ves lo que cada uno dice de ti, y lo que queda escondido.',
       dinheiro: 'Quien trabaja muchísimo y no prospera casi siempre tiene la energía en el lugar equivocado. Júpiter y tu Casa 2 muestran exactamente de dónde viene tu dinero y por dónde se te escapa.',
       carreira: 'Esfuerzo sin resultados suele ser talento en la dirección equivocada. Tu Medio Cielo muestra dónde rindes más y Saturno muestra qué te está frenando.',
       espiritual: 'Ese cansancio del alma tiene dirección en tu carta astral. Tu Luna y Neptuno muestran lo que necesitas para volver a sentirte complet{o|a}.',
@@ -59,9 +59,9 @@ export default {
     readingTitle: 'Tu lectura de {focus}',
     factors: {
       amor: [
-        { point: 'venus', text: 'En el amor, te entregas {style}.' },
-        { point: 'mars', text: 'Te atraen las personas que actúan {style}.' },
-        { point: 'house7', fallback: 'moon', text: 'La persona indicada para ti actúa {style}.' },
+        { point: 'venus', text: 'Tu Venus explica por qué amas {style}. Lo que pide a cambio, y casi nadie te da, está en la carta completa.' },
+        { point: 'mars', text: 'Te atraen las personas que actúan {style}. No siempre son las que te hacen bien, y tu carta muestra por qué.' },
+        { point: 'house7', fallback: 'moon', text: 'La persona que se queda de verdad actúa {style}. El motivo de que atraigas lo opuesto ya aparece en tu carta…' },
       ],
       dinheiro: [
         { point: 'jupiter', text: 'Tu suerte financiera crece cuando actúas {style}.' },
@@ -85,7 +85,7 @@ export default {
       sub: 'Calculadas con el tránsito real de los planetas sobre tu carta astral. Anótalas.',
       transit: '{transit} en {type} con {natal} natal',
       meaning: {
-        amor: { jupiter: 'Gran suerte en el amor: ideal para conocer a alguien nuevo.', venus: 'Día magnético: te ves más atractiv{o|a} y receptiv{o|a}.', sun: 'Día de claridad: ideal para hablar de la relación.', moon: 'Día sensible: el corazón habla más fuerte, aprovecha para declararte.' },
+        amor: { jupiter: 'Júpiter abre puertas en el amor: día favorable para conocer a alguien o permitirte algo nuevo.', venus: 'Tu día más magnético: te ves más atractiv{o|a} y receptiv{o|a}.', sun: 'Día de claridad: bueno para esa conversación sobre la relación.', moon: 'Día sensible: el corazón habla más fuerte. Bueno para decir lo que sientes.' },
         dinheiro: { jupiter: 'Ventana de expansión: ideal para negociar, pedir un aumento o invertir.', venus: 'Día de atracción de dinero: las ventas y propuestas fluyen mejor.', sun: 'Día de visibilidad: muestra tu trabajo y cobra lo que vale.', moon: 'Día de intuición financiera: confía en tu olfato para las oportunidades.' },
         carreira: { jupiter: 'Ventana de crecimiento: ideal para entrevistas, propuestas y arrancar proyectos.', venus: 'Día de buenas relaciones: el networking y las alianzas rinden más.', sun: 'Día para destacar: tus resultados se ven más.', moon: 'Día de intuición: surgen buenas ideas, anótalo todo.' },
         espiritual: { jupiter: 'Portal de expansión: ideal para meditar, estudiar y empezar de nuevo.', venus: 'Día de sanación emocional: perdona, limpia y reconéctate.', sun: 'Día de fuerza vital: tu energía está por las nubes.', moon: 'Día de intuición aguda: presta atención a las señales y a los sueños.' },
@@ -141,7 +141,7 @@ export default {
         dominantWater: 'Usa tu Agua: rindes más cuando confías en tu intuición. Tu primera corazonada suele ser la correcta.',
       },
       focus: {
-        amor: 'Deja de esperar a que el otro cambie. Tu Venus te pide amar {style}, y quien no sigue ese ritmo no es para ti.',
+        amor: 'Deja de esperar a que el otro cambie. Tu Venus te pide amar {style}, y quien no sigue ese ritmo difícilmente te hará feliz.',
         dinheiro: 'Tu dinero se traba cuando trabajas en contra de tu naturaleza. Tu Júpiter te pide ganar dinero {style}.',
         carreira: 'Tu vocación no es un puesto, es una forma de trabajar. Tu carta astral te pide actuar {style}.',
         espiritual: 'Tu paz no está afuera. Tu Luna te pide vivir {style}, y eso es lo que reconecta tu alma.',
@@ -176,7 +176,7 @@ export default {
       { title: 'Calendario de Fechas de Oro', text: 'Tus mejores días para el {focus} en cada mes del próximo año.' },
       { title: 'Carta Numerológica Personal', text: 'Tu número de vida, tu año personal y lo que te piden.' },
     ],
-    guides: { amor: 'Código del Amor', dinheiro: 'Código de la Prosperidad', carreira: 'Código de la Carrera', espiritual: 'Código del Alma' },
+    guides: { amor: 'Código del Amor y la Compatibilidad', dinheiro: 'Código de la Prosperidad', carreira: 'Código de la Carrera', espiritual: 'Código del Alma' },
     total: 'Valor total',
     today: 'Hoy, por solo',
     bonusTag: 'Bono',
@@ -184,7 +184,7 @@ export default {
 
   sales: {
     headlineByFocus: {
-      amor: '{name}, tu carta astral muestra por qué el amor se te traba.',
+      amor: '{name}, el motivo de que siempre atraigas al mismo tipo de persona está en tu carta.',
       dinheiro: '{name}, tu carta astral muestra dónde está atorado tu dinero.',
       carreira: '{name}, tu carta astral muestra hacia dónde debería ir tu carrera.',
       espiritual: '{name}, tu carta astral muestra lo que tu alma te está pidiendo.',

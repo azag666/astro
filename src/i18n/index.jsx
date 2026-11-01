@@ -83,6 +83,12 @@ export function I18nProvider({ country, gender, children }) {
       if (v == null) return path
       return deep(v, vars)
     }
+    // Variante por foco: 'a.b' tenta 'a.bByFocus.<foco>' e cai em 'a.b'
+    const tf = (path, focus, vars) => {
+      const k = `${path}ByFocus.${focus}`
+      const v = t(k, vars)
+      return v === k ? t(path, vars) : v
+    }
     const deep = (v, vars) =>
       typeof v === 'string'
         ? fill(v, vars)
@@ -106,6 +112,7 @@ export function I18nProvider({ country, gender, children }) {
       c,
       lang: c.lang,
       t,
+      tf,
       fill,
       dict,
       money: (n) => money.format(n),

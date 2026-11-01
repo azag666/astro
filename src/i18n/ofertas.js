@@ -79,6 +79,7 @@ export default {
       waiting: 'Aguardando resposta',
       answered: 'Respondida',
       back: 'Voltar',
+      backToMap: 'Voltar para o meu mapa',
       list: {
         helena: { name: 'Helena', role: 'Astróloga', years: '18 anos de prática', tags: ['Mapa natal', 'Trânsitos', 'Revolução solar'], bio: 'Lê o seu mapa como um roteiro: o que está em jogo agora e qual o melhor momento para agir.' },
         marina: { name: 'Marina', role: 'Taróloga', years: '12 anos de prática', tags: ['Tarô', 'Amor', 'Decisões'], bio: 'Tira as cartas para a sua pergunta e cruza com o seu momento astrológico.' },
@@ -187,6 +188,7 @@ export default {
       waiting: 'Esperando respuesta',
       answered: 'Respondida',
       back: 'Volver',
+      backToMap: 'Volver a mi carta',
       list: {
         helena: { name: 'Elena', role: 'Astróloga', years: '18 años de práctica', tags: ['Carta natal', 'Tránsitos', 'Revolución solar'], bio: 'Lee tu carta como un mapa de ruta: qué está en juego ahora y cuál es el mejor momento para actuar.' },
         marina: { name: 'Marina', role: 'Tarotista', years: '12 años de práctica', tags: ['Tarot', 'Amor', 'Decisiones'], bio: 'Tira las cartas para tu pregunta y las cruza con tu momento astrológico.' },
@@ -311,6 +313,7 @@ export default {
       waiting: '等待回复',
       answered: '已回复',
       back: '返回',
+      backToMap: '返回我的星盘',
       list: {
         helena: { name: 'Helena', role: '占星师', years: '18 年经验', tags: ['本命盘', '行运', '太阳返照'], bio: '把你的星盘当作路线图：现在的重点和最佳行动时机。' },
         marina: { name: 'Marina', role: '塔罗师', years: '12 年经验', tags: ['塔罗', '爱情', '抉择'], bio: '为你的问题抽牌，并结合你的星象时机。' },

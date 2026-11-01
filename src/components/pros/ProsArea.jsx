@@ -70,6 +70,14 @@ export default function ProsArea({ data, profiles = [], initialPro = null }) {
       <AnimatePresence mode="wait">
         {view.name === 'list' && (
           <motion.div key="list" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            {/* Da lista volta para a oferta/mapa: sem isso a pessoa ficava presa nas especialistas */}
+            <BackButton
+              onClick={() => {
+                window.location.hash = '#/offer'
+                window.scrollTo({ top: 0 })
+              }}
+              label={t('pros.backToMap')}
+            />
             <h2 className="font-serif text-3xl font-semibold">{t('pros.title')}</h2>
             <p className="mt-2 text-white/60">{t('pros.sub')}</p>
             <div className="mt-6 space-y-3">

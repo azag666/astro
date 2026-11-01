@@ -25,8 +25,8 @@ const reveal = {
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
-export default function FreeReport({ data, chart, isMain = true, orders = [], onBuy }) {
-  const { t, c, money } = useI18n()
+export default function FreeReport({ data, chart, isMain = true, orders = [], onBuy, compat = null }) {
+  const { t, tf, c, money } = useI18n()
   const focus = data.focus || 'espiritual'
   const focusShort = t(`focus.${focus}.short`)
   const name = (data.name || '').trim().split(/\s+/)[0]
@@ -100,7 +100,7 @@ export default function FreeReport({ data, chart, isMain = true, orders = [], on
           <h1 className="font-serif text-[2rem] font-semibold leading-tight sm:text-5xl">
             {isMain ? t(`sales.headlineByFocus.${focus}`, { name }) : t('profiles.headlineOther', { name })}
           </h1>
-          <p className="mt-2 text-gradient-gold font-serif text-xl italic">{isMain ? t('sales.headlineAccent') : t('profiles.accentOther')}</p>
+          <p className="mt-2 text-gradient-gold font-serif text-xl italic">{isMain ? tf('sales.headlineAccent', focus) : t('profiles.accentOther')}</p>
           <p className="mt-3 flex items-center gap-2 text-xs text-white/45">
             <motion.span className="h-2 w-2 rounded-full bg-emerald-400" animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 1.6 }} />
             {t('report.generated')}
@@ -140,11 +140,25 @@ export default function FreeReport({ data, chart, isMain = true, orders = [], on
             </motion.div>
           ))}
         </div>
+        {focus === 'amor' && (
+          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+            <p className="text-xs uppercase tracking-widest text-gold-300/80">{t('report.loveQuestions.title')}</p>
+            <ul className="mt-2 space-y-2 text-sm text-white/70">
+              {t('report.loveQuestions.items').map((x) => (
+                <li key={x} className="flex items-start gap-2">
+                  <LockClosedIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold-400" /> {x}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </Block>
 
+      {compat}
+
       {/* Datas de ouro */}
-      <Block id="datas" icon={CalendarDaysIcon} title={t('report.golden.title')} highlight>
-        <p className="text-sm text-white/60">{t('report.golden.sub')}</p>
+      <Block id="datas" icon={CalendarDaysIcon} title={tf('report.golden.title', focus)} highlight>
+        <p className="text-sm text-white/60">{tf('report.golden.sub', focus)}</p>
         <div className="mt-4 space-y-3">
           {forecast.golden.map((d, i) => (
             <motion.div
@@ -191,7 +205,7 @@ export default function FreeReport({ data, chart, isMain = true, orders = [], on
             </p>
           )}
         </div>
-        <InlineCta onClick={onBuy} label={t('report.golden.cta')} />
+        <InlineCta onClick={onBuy} label={tf('report.golden.cta', focus)} />
       </Block>
 
       {/* Numerologia */}
@@ -294,7 +308,13 @@ export default function FreeReport({ data, chart, isMain = true, orders = [], on
             transition={{ duration: 1.2, ease: 'easeOut' }}
           />
         </div>
-        <p className="mt-3 text-sm text-white/60">{t('report.seenSub')}</p>
+        <p className="mt-3 text-sm text-white/60">{tf('report.seenSub', focus)}</p>
+        {isMain && focus === 'amor' && firstGolden && (
+          <p className="mt-3 flex items-start gap-2 rounded-xl bg-gold-400/10 p-3 text-sm text-gold-200">
+            <CalendarDaysIcon className="mt-0.5 h-4 w-4 shrink-0" />
+            {t('report.urgency.amor', { date: fmtDay(firstGolden.date, { day: 'numeric', month: 'long' }) })}
+          </p>
+        )}
         <button onClick={onBuy} className="btn-gold mt-5 w-full text-lg">
           {isMain ? t('sales.unlock') : t('profiles.buyFor', { name })} <ArrowRightIcon className="h-5 w-5" />
         </button>

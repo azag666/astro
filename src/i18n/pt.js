@@ -181,7 +181,7 @@ export default {
     priceLine: 'De {from} por {price} · Garantia de 7 dias',
     buyShort: 'Quero meu mapa — {price}',
     buyMobile: 'Quero meu mapa por {price}',
-    trust: ['Entrega em até 48h', 'Feito por astrólogos', 'Garantia de 7 dias', 'Pagamento seguro'],
+    trust: ['Entrega imediata', 'Feito por astrólogos', 'Garantia de 7 dias', 'Pagamento seguro'],
     get: {
       eyebrow: 'O que você recebe',
       title: 'Um livro sobre você, escrito pelas estrelas',
@@ -210,7 +210,7 @@ export default {
       steps: [
         { title: 'Seus dados já estão prontos', text: 'Usamos as respostas do seu teste. Você só confirma o contato.' },
         { title: 'Calculamos e interpretamos', text: 'Nossos astrólogos montam e escrevem a interpretação do seu mapa.' },
-        { title: 'Receba em até 48h', text: 'O PDF completo e os bônus chegam no seu e-mail.' },
+        { title: 'Receba na hora', text: 'O PDF completo e os bônus chegam no seu e-mail.' },
       ],
       stepOneGeneric: { title: 'Informe seus dados', text: 'Data, hora e cidade de nascimento, além do seu contato.' },
     },
@@ -218,7 +218,7 @@ export default {
     offer: {
       eyebrow: 'Oferta especial',
       title: 'Seu Mapa Astral Completo',
-      items: ['Mapa Astral completo', 'Interpretação de todos os planetas e das 12 casas', 'Diagrama Energético dos próximos 12 meses', 'Carta Numerológica Pessoal', 'Entrega por e-mail em até 48h'],
+      items: ['Mapa Astral completo', 'Interpretação de todos os planetas e das 12 casas', 'Diagrama Energético dos próximos 12 meses', 'Carta Numerológica Pessoal', 'Entrega imediata por e-mail'],
       off: '{n}% off',
       once: 'Pagamento único.',
       cta: 'Quero meu mapa astral',
@@ -235,7 +235,7 @@ export default {
   faq: [
     { q: 'O que é um mapa astral?', a: 'É uma fotografia do céu no exato momento e local do seu nascimento. A posição de cada planeta nos signos e nas casas descreve sua personalidade, seus talentos e os ciclos da sua vida.' },
     { q: 'Não sei a hora em que nasci. Posso fazer?', a: 'Pode. Calculamos tudo que não depende da hora e usamos o método de retificação para o Ascendente. Você também pode nos enviar a hora depois.' },
-    { q: 'Quando e como eu recebo?', a: 'Em até 48 horas, por e-mail, em PDF. O arquivo é seu para sempre.' },
+    { q: 'Quando e como eu recebo?', a: 'Na hora, por e-mail, em PDF, assim que o pagamento é aprovado. O arquivo é seu para sempre.' },
     { q: 'Preciso entender de astrologia?', a: 'Não. Toda a interpretação é escrita em linguagem simples, com exemplos do dia a dia e orientações práticas.' },
     { q: 'E se eu não gostar?', a: 'Você tem 7 dias de garantia incondicional. Basta responder ao e-mail de entrega e devolvemos 100% do valor.' },
     { q: 'O pagamento é seguro?', a: 'Sim. O pagamento é processado com criptografia e não armazenamos dados do seu cartão.' },
@@ -274,7 +274,7 @@ export default {
     summary: 'Resumo do pedido',
     product: 'Mapa Astral Completo',
     pages: 'Planetas, casas e aspectos',
-    includes: ['Diagrama dos próximos 12 meses', 'Carta Numerológica Pessoal', 'Entrega em até 48h'],
+    includes: ['Diagrama dos próximos 12 meses', 'Carta Numerológica Pessoal', 'Entrega imediata'],
     lineMain: 'Mapa Astral',
     lineBump: 'Revolução Solar',
     total: 'Total',
@@ -311,7 +311,7 @@ export default {
     steps: [
       { title: 'Pagamento confirmado', text: 'Pedido de {total} aprovado.' },
       { title: 'Seu mapa está sendo preparado', text: 'Nossos astrólogos já receberam seus dados de nascimento.' },
-      { title: 'Entrega em até 48h', text: 'No seu e-mail ({email}).' },
+      { title: 'Entrega imediata', text: 'No seu e-mail ({email}).' },
     ],
     support: 'Dúvidas? Fale com o suporte',
   },

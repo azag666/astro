@@ -181,7 +181,7 @@ export default {
     priceLine: 'Antes {from}, hoy {price} · Garantía de 7 días',
     buyShort: 'Quiero mi carta — {price}',
     buyMobile: 'Quiero mi carta por {price}',
-    trust: ['Entrega en máximo 48 h', 'Hecha por astrólogos', 'Garantía de 7 días', 'Pago seguro'],
+    trust: ['Entrega inmediata', 'Hecha por astrólogos', 'Garantía de 7 días', 'Pago seguro'],
     get: {
       eyebrow: 'Lo que recibes',
       title: 'Un libro sobre ti, escrito por las estrellas',
@@ -210,7 +210,7 @@ export default {
       steps: [
         { title: 'Tus datos ya están listos', text: 'Usamos las respuestas de tu test. Solo confirmas tu contacto.' },
         { title: 'Calculamos e interpretamos', text: 'Nuestros astrólogos arman y redactan la interpretación de tu carta.' },
-        { title: 'Recíbela en máximo 48 h', text: 'El PDF completo y los bonos llegan a tu e-mail.' },
+        { title: 'Recíbela al instante', text: 'El PDF completo y los bonos llegan a tu e-mail.' },
       ],
       stepOneGeneric: { title: 'Ingresa tus datos', text: 'Fecha, hora y ciudad de nacimiento, además de tu contacto.' },
     },
@@ -218,7 +218,7 @@ export default {
     offer: {
       eyebrow: 'Oferta especial',
       title: 'Tu Carta Astral Completa',
-      items: ['Carta Astral completa', 'Interpretación de todos los planetas y las 12 casas', 'Diagrama Energético de los próximos 12 meses', 'Carta Numerológica Personal', 'Entrega por e-mail en máximo 48 h'],
+      items: ['Carta Astral completa', 'Interpretación de todos los planetas y las 12 casas', 'Diagrama Energético de los próximos 12 meses', 'Carta Numerológica Personal', 'Entrega inmediata por e-mail'],
       off: '{n}% de descuento',
       once: 'Pago único.',
       cta: 'Quiero mi carta astral',
@@ -235,7 +235,7 @@ export default {
   faq: [
     { q: '¿Qué es una carta astral?', a: 'Es una fotografía del cielo en el momento y lugar exactos de tu nacimiento. La posición de cada planeta en los signos y en las casas describe tu personalidad, tus talentos y los ciclos de tu vida.' },
     { q: 'No sé a qué hora nací. ¿Puedo hacerla?', a: 'Sí. Calculamos todo lo que no depende de la hora y usamos el método de rectificación para el Ascendente. También puedes enviarnos la hora después.' },
-    { q: '¿Cuándo y cómo la recibo?', a: 'En máximo 48 horas, por e-mail, en PDF. El archivo es tuyo para siempre.' },
+    { q: '¿Cuándo y cómo la recibo?', a: 'Al instante, por e-mail, en PDF, apenas se aprueba el pago. El archivo es tuyo para siempre.' },
     { q: '¿Necesito saber de astrología?', a: 'No. Toda la interpretación está escrita en lenguaje sencillo, con ejemplos de la vida diaria y consejos prácticos.' },
     { q: '¿Y si no me gusta?', a: 'Tienes 7 días de garantía incondicional. Solo responde al e-mail de entrega y te devolvemos el 100% de tu dinero.' },
     { q: '¿El pago es seguro?', a: 'Sí. El pago se procesa con cifrado y no almacenamos los datos de tu tarjeta.' },
@@ -274,7 +274,7 @@ export default {
     summary: 'Resumen del pedido',
     product: 'Carta Astral Completa',
     pages: 'Planetas, casas y aspectos',
-    includes: ['Diagrama de los próximos 12 meses', 'Carta Numerológica Personal', 'Entrega en máximo 48 h'],
+    includes: ['Diagrama de los próximos 12 meses', 'Carta Numerológica Personal', 'Entrega inmediata'],
     lineMain: 'Carta Astral',
     lineBump: 'Revolución Solar',
     total: 'Total',
@@ -311,7 +311,7 @@ export default {
     steps: [
       { title: 'Pago confirmado', text: 'Pedido de {total} aprobado.' },
       { title: 'Tu carta se está preparando', text: 'Nuestros astrólogos ya recibieron tus datos de nacimiento.' },
-      { title: 'Entrega en máximo 48 h', text: 'En tu e-mail ({email}).' },
+      { title: 'Entrega inmediata', text: 'En tu e-mail ({email}).' },
     ],
     support: '¿Dudas? Habla con soporte',
   },

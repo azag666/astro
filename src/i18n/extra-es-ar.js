@@ -1,12 +1,13 @@
 // Overrides es-AR (voseo) sobre extra-es.js. Los arrays se reemplazan enteros.
 export default {
   focus: {
+    amor: { text: 'Tu Venus muestra cómo amás. Tu Marte, quién te atrae. Y tu Casa 7 guarda el tipo de persona que se queda, y el motivo de que el mismo patrón vuelva.' },
     espiritual: { text: 'Tu Luna, Neptuno y tu Sol muestran lo que tu alma vino a vivir y por qué a veces te sentís perdid{o|a}.' },
   },
 
   intro: {
     byFocus: {
-      amor: { sub: 'Descubrí por qué siempre atraés al mismo tipo de persona, qué te pide tu Venus y cuáles son tus 3 días más magnéticos de los próximos 30 días.' },
+      amor: { sub: 'Descubrí por qué siempre atraés al mismo tipo de persona, con quién combinás de verdad y cuáles son tus 3 días más magnéticos de los próximos 30 días.' },
       dinheiro: { sub: 'Mirá de dónde viene tu prosperidad, por dónde se te escapa la plata y tus 3 fechas de oro financieras de los próximos 30 días, calculadas con la posición real de los planetas.' },
       carreira: { sub: 'Descubrí tu verdadera vocación según tu Medio Cielo, qué frena tu crecimiento y los 3 mejores días para actuar en los próximos 30 días.' },
       espiritual: { sub: 'Entendé lo que tu alma vino a vivir, por qué te sentís desconectad{o|a} y qué días del próximo mes te abren puertas.' },
@@ -18,7 +19,7 @@ export default {
       dinheiro: { options: { leaks: 'Gano, pero la plata se me va' } },
     },
     insight: {
-      amor: 'Los patrones en el amor casi nunca son mala suerte. En la carta astral aparecen en la posición de Venus, de Marte y de tu Casa 7. Cuando entendés lo que te piden, el patrón pierde su fuerza.',
+      amor: 'Los patrones en el amor casi nunca son mala suerte. Aparecen en la posición de tu Venus, de tu Marte y de tu Casa 7. En un momento ves lo que cada uno dice de vos, y lo que queda escondido.',
       dinheiro: 'El que trabaja muchísimo y no prospera casi siempre tiene la energía en el lugar equivocado. Júpiter y tu Casa 2 muestran exactamente de dónde viene tu plata y por dónde se te escapa.',
       carreira: 'Esfuerzo sin resultados suele ser talento en la dirección equivocada. Tu Medio Cielo muestra dónde rendís más y Saturno muestra qué te está frenando.',
       espiritual: 'Ese cansancio del alma tiene dirección en tu carta astral. Tu Luna y Neptuno muestran lo que necesitás para volver a sentirte complet{o|a}.',
@@ -31,9 +32,9 @@ export default {
   report: {
     factors: {
       amor: [
-        { point: 'venus', text: 'En el amor, te entregás {style}.' },
-        { point: 'mars', text: 'Te atraen las personas que actúan {style}.' },
-        { point: 'house7', fallback: 'moon', text: 'La persona indicada para vos actúa {style}.' },
+        { point: 'venus', text: 'Tu Venus explica por qué amás {style}. Lo que pide a cambio, y casi nadie te da, está en la carta completa.' },
+        { point: 'mars', text: 'Te atraen las personas que actúan {style}. No siempre son las que te hacen bien, y tu carta muestra por qué.' },
+        { point: 'house7', fallback: 'moon', text: 'La persona que se queda de verdad actúa {style}. El motivo de que atraigas lo opuesto ya aparece en tu carta…' },
       ],
       dinheiro: [
         { point: 'jupiter', text: 'Tu suerte financiera crece cuando actuás {style}.' },
@@ -54,7 +55,7 @@ export default {
     golden: {
       sub: 'Calculadas con el tránsito real de los planetas sobre tu carta astral. Anotalas.',
       meaning: {
-        amor: { venus: 'Día magnético: te ves más atractiv{o|a} y receptiv{o|a}.', moon: 'Día sensible: el corazón habla más fuerte, aprovechá para declararte.' },
+        amor: { jupiter: 'Júpiter abre puertas en el amor: día favorable para conocer a alguien o permitirte algo nuevo.', moon: 'Día sensible: el corazón habla más fuerte. Bueno para decir lo que sentís.' },
         dinheiro: { sun: 'Día de visibilidad: mostrá tu trabajo y cobrá lo que vale.', moon: 'Día de intuición financiera: confiá en tu olfato para las oportunidades.' },
         carreira: { moon: 'Día de intuición: surgen buenas ideas, anotá todo.' },
         espiritual: { venus: 'Día de sanación emocional: perdoná, limpiá y reconectate.', moon: 'Día de intuición aguda: prestá atención a las señales y a los sueños.' },
@@ -88,7 +89,7 @@ export default {
         dominantWater: 'Usá tu Agua: rendís más cuando confiás en tu intuición. Tu primera corazonada suele ser la correcta.',
       },
       focus: {
-        amor: 'Dejá de esperar que el otro cambie. Tu Venus te pide amar {style}, y quien no sigue ese ritmo no es para vos.',
+        amor: 'Dejá de esperar que el otro cambie. Tu Venus te pide amar {style}, y quien no sigue ese ritmo difícilmente te va a hacer feliz.',
         dinheiro: 'Tu plata se traba cuando trabajás en contra de tu naturaleza. Tu Júpiter te pide ganar plata {style}.',
       },
       actions: { dinheiro: 'mover tu plata' },

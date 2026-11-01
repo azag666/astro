@@ -92,7 +92,7 @@ export default {
       steps: [
         { title: 'Tus datos ya están listos', text: 'Usamos las respuestas de tu test. Solo confirmás tu contacto.' },
         { title: 'Calculamos e interpretamos', text: 'Nuestros astrólogos arman y redactan la interpretación de tu carta.' },
-        { title: 'Recibila en máximo 48 h', text: 'El PDF completo y los bonos llegan a tu e-mail.' },
+        { title: 'Recibila al instante', text: 'El PDF completo y los bonos llegan a tu e-mail.' },
       ],
       stepOneGeneric: { title: 'Ingresá tus datos' },
     },
@@ -101,7 +101,7 @@ export default {
   faq: [
     { q: '¿Qué es una carta astral?', a: 'Es una fotografía del cielo en el momento y lugar exactos de tu nacimiento. La posición de cada planeta en los signos y en las casas describe tu personalidad, tus talentos y los ciclos de tu vida.' },
     { q: 'No sé a qué hora nací. ¿La puedo hacer?', a: 'Sí. Calculamos todo lo que no depende de la hora y usamos el método de rectificación para el Ascendente. También podés enviarnos la hora después.' },
-    { q: '¿Cuándo y cómo la recibo?', a: 'En máximo 48 horas, por e-mail, en PDF. El archivo es tuyo para siempre.' },
+    { q: '¿Cuándo y cómo la recibo?', a: 'Al instante, por e-mail, en PDF, apenas se aprueba el pago. El archivo es tuyo para siempre.' },
     { q: '¿Necesito saber de astrología?', a: 'No. Toda la interpretación está escrita en lenguaje sencillo, con ejemplos de la vida diaria y consejos prácticos.' },
     { q: '¿Y si no me gusta?', a: 'Tenés 7 días de garantía incondicional. Solo respondé al e-mail de entrega y te devolvemos el 100% de tu dinero.' },
     { q: '¿El pago es seguro?', a: 'Sí. El pago se procesa con cifrado y no almacenamos los datos de tu tarjeta.' },

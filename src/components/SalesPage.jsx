@@ -32,7 +32,8 @@ import Countdown from './Countdown'
 import FreeReport from './FreeReport'
 import ProfileCard, { ProfileSwitcher } from './ProfileHeader'
 import AddProfileSheet from './AddProfileSheet'
-import { addProfile } from '../lib/account'
+import CompatTeaser from './CompatTeaser'
+import { addProfile, currentAccount } from '../lib/account'
 import { ZodiacWheel } from './Sky'
 import { computeChart } from '../lib/astro'
 import { useI18n } from '../i18n'
@@ -55,9 +56,12 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
   const [scrolled, setScrolled] = useState(false)
   useMotionValueEvent(scrollY, 'change', (v) => setScrolled(v > 500))
 
-  const [profiles, setProfiles] = useState(() => account?.profiles || [])
+  // Lê do aparelho: perfis criados aqui não sobem para o estado do App (voltar do checkout os perdia)
+  const [profiles, setProfiles] = useState(() => (account ? currentAccount()?.profiles || account.profiles || [] : []))
   const [activeId, setActiveId] = useState('main')
   const [sheetOpen, setSheetOpen] = useState(false)
+  // Perfil aberto pelo bloco de compatibilidade: depois de salvar, volta para ele
+  const [sheetFromCompat, setSheetFromCompat] = useState(false)
   const mainProfile = { id: 'main', name: data.name, birthDate: data.birthDate, birthTime: data.birthTime, unknownTime: data.unknownTime, place: data.place }
   const active = profiles.find((p) => p.id === activeId) || mainProfile
   const isMain = active.id === 'main'
@@ -69,6 +73,29 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
     [view.birthDate, view.birthTime, view.unknownTime, view.place],
   )
   const buy = () => onBuy(isMain ? null : active)
+  const focus = data.focus || 'espiritual'
+  const partner = [...profiles].reverse().find((p) => p.relation === 'partner') || null
+  const compat =
+    isMain && focus === 'amor' && chart ? (
+      <CompatTeaser
+        chart={chart}
+        partner={partner}
+        onAdd={
+          account
+            ? () => {
+                setSheetFromCompat(true)
+                setSheetOpen(true)
+              }
+            : null
+        }
+        onView={(id) => {
+          setActiveId(id)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }}
+        onBuyFor={(p) => onBuy(p)}
+        onBuy={buy}
+      />
+    ) : null
 
   return (
     <div className="relative">
@@ -111,27 +138,37 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
           isMain={isMain}
           orders={(account?.orders || []).filter((o) => (o.profileId || 'main') === active.id)}
           onBuy={buy}
+          compat={compat}
         />
       ) : (
         <GenericHero onBuy={buy} />
       )}
       <AddProfileSheet
         open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
+        onClose={() => {
+          setSheetOpen(false)
+          setSheetFromCompat(false)
+        }}
         onSave={(p) => {
           const saved = addProfile(p)
           if (!saved) return
           setProfiles((list) => [...list, saved])
-          setActiveId(saved.id)
           setSheetOpen(false)
+          if (sheetFromCompat && saved.relation === 'partner') {
+            setSheetFromCompat(false)
+            setTimeout(() => document.getElementById('compat')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 350)
+            return
+          }
+          setSheetFromCompat(false)
+          setActiveId(saved.id)
           window.scrollTo({ top: 0, behavior: 'smooth' })
         }}
       />
       <TrustBar />
       <Engine />
-      <WhatYouGet />
+      <WhatYouGet focus={focus} />
       <div id="pacote" className="scroll-mt-28">
-        <Stack focus={data.focus || 'espiritual'} onBuy={buy} />
+        <Stack focus={focus} onBuy={buy} />
       </div>
       <Bonuses />
       <HowItWorks quizDone={!!chart} />
@@ -139,7 +176,7 @@ export default function SalesPage({ data, account, onBuy, onCountry, onLogout })
       <div className="mx-auto max-w-6xl px-5 pb-10">
         <Reviews pro="" title={t('sales.testimonials.title')} />
       </div>
-      <Offer onBuy={buy} />
+      <Offer focus={focus} onBuy={buy} />
       <Faq />
       <Footer />
 
@@ -323,7 +360,7 @@ function Engine() {
 const STACK_VALUES = [97, 67, 47, 47, 37]
 
 function Stack({ focus, onBuy }) {
-  const { t, money, c } = useI18n()
+  const { t, tf, money, c } = useI18n()
   const factor = c.from / 97.9
   const nice = (v) => {
     const x = v * factor
@@ -334,7 +371,7 @@ function Stack({ focus, onBuy }) {
   const values = STACK_VALUES.map(nice)
   const total = values.reduce((a, b) => a + b, 0)
   const focusShort = t(`focus.${focus}.short`)
-  const items = t('stack.items', { focus: focusShort, guide: t(`stack.guides.${focus}`) })
+  const items = tf('stack.items', focus, { focus: focusShort, guide: t(`stack.guides.${focus}`) })
   const icons = [DocumentTextIcon, CalendarDaysIcon, BookOpenIcon, StarIcon, HashtagIcon]
 
   return (
@@ -389,16 +426,16 @@ function Stack({ focus, onBuy }) {
   )
 }
 
-function WhatYouGet() {
-  const { t } = useI18n()
+function WhatYouGet({ focus }) {
+  const { t, tf } = useI18n()
   const badgeIcons = [DocumentTextIcon, PencilSquareIcon, EnvelopeIcon]
   return (
     <section className="mx-auto max-w-6xl px-5 py-24">
-      <SectionTitle eyebrow={t('sales.get.eyebrow')} title={t('sales.get.title')} sub={t('sales.get.sub')} />
+      <SectionTitle eyebrow={t('sales.get.eyebrow')} title={tf('sales.get.title', focus)} sub={tf('sales.get.sub', focus)} />
       <div className="mt-16 grid items-center gap-12 lg:grid-cols-2">
         <ReportMockup />
         <div className="space-y-4">
-          {t('sales.get.chapters').map((title, i) => {
+          {tf('sales.get.chapters', focus).map((title, i) => {
             const Icon = CHAPTER_ICONS[i]
             return (
               <motion.div
@@ -541,8 +578,9 @@ function HowItWorks({ quizDone }) {
   )
 }
 
-function Offer({ onBuy }) {
-  const { t, money, c } = useI18n()
+function Offer({ focus, onBuy }) {
+  const { t, tf, money, c } = useI18n()
+  const extra = tf('sales.offer.extra', focus)
   return (
     <section id="oferta" className="mx-auto max-w-6xl px-5 py-24">
       <motion.div
@@ -555,7 +593,7 @@ function Offer({ onBuy }) {
         <p className="relative text-xs font-semibold uppercase tracking-[0.25em] text-gold-300">{t('sales.offer.eyebrow')}</p>
         <h2 className="relative mt-3 font-serif text-4xl font-semibold">{t('sales.offer.title')}</h2>
         <ul className="relative mt-8 space-y-3">
-          {t('sales.offer.items').map((it) => (
+          {[...(Array.isArray(extra) ? extra : []), ...t('sales.offer.items')].map((it) => (
             <li key={it} className="flex items-start gap-3 text-white/80">
               <CheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-gold-400" />
               {it}
@@ -573,7 +611,7 @@ function Offer({ onBuy }) {
         </div>
         <p className="relative mt-1 text-sm text-white/50">{t('sales.offer.once')}</p>
         <button onClick={onBuy} className="btn-gold relative mt-8 w-full text-lg">
-          {t('sales.offer.cta')}
+          {tf('sales.offer.cta', focus)}
           <ArrowRightIcon className="h-5 w-5" />
         </button>
         <div className="relative mt-8 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-5">

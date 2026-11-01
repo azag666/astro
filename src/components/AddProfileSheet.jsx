@@ -4,8 +4,10 @@ import { UserIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import CitySearch from './CitySearch'
 import { DateSelect, TimeSelect } from './DateSelect'
 import { useI18n } from '../i18n'
+import { guessGender } from '../lib/gender'
 
-const EMPTY = { name: '', relation: 'partner', gender: 'f', birthDate: '', birthTime: '', unknownTime: false, place: null }
+// Oferta focada em amor: a pessoa adicionada é sempre o(a) parceiro(a), e o gênero sai do nome (sem perguntar)
+const EMPTY = { name: '', relation: 'partner', gender: '', birthDate: '', birthTime: '', unknownTime: false, place: null }
 
 // Bottom sheet (mobile-first) para cadastrar o perfil de outra pessoa.
 export default function AddProfileSheet({ open, onClose, onSave }) {
@@ -23,7 +25,7 @@ export default function AddProfileSheet({ open, onClose, onSave }) {
             onSubmit={(e) => {
               e.preventDefault()
               if (!valid) return
-              onSave(p)
+              onSave({ ...p, gender: guessGender(p.name) || 'n' })
               setP(EMPTY)
             }}
             initial={{ y: '100%' }}
@@ -43,46 +45,28 @@ export default function AddProfileSheet({ open, onClose, onSave }) {
               </button>
             </div>
 
-            <div className="mt-5 space-y-4">
-              <div className="relative">
-                <UserIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gold-300/70" />
-                <input className="field pl-12" placeholder={t('profiles.sheet.name')} value={p.name} onChange={(e) => set({ name: e.target.value })} />
-              </div>
-
+            <div className="mt-5 space-y-5">
               <div>
-                <p className="mb-2 text-sm text-white/60">{t('profiles.sheet.relation')}</p>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(t('profiles.relations')).map(([k, label]) => (
-                    <Pill key={k} active={p.relation === k} onClick={() => set({ relation: k })}>
-                      {label}
-                    </Pill>
-                  ))}
+                <Label>{t('profiles.sheet.name')}</Label>
+                <div className="relative">
+                  <UserIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gold-300/70" />
+                  <input className="field pl-12" autoComplete="off" placeholder={t('quiz.name.placeholder')} value={p.name} onChange={(e) => set({ name: e.target.value })} />
                 </div>
               </div>
-
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(t('profiles.sheet.gender')).map(([k, label]) => (
-                  <Pill key={k} active={p.gender === k} onClick={() => set({ gender: k })}>
-                    {label}
-                  </Pill>
-                ))}
-              </div>
-
               <div>
-                <span className="mb-1 block text-xs text-white/50">{t('profiles.sheet.date')}</span>
+                <Label>{t('profiles.sheet.date')}</Label>
                 <DateSelect value={p.birthDate} onChange={(v) => set({ birthDate: v })} />
               </div>
               <div>
-                <span className="mb-1 block text-xs text-white/50">{t('profiles.sheet.time')}</span>
-                <TimeSelect value={p.birthTime} disabled={p.unknownTime} onChange={(v) => set({ birthTime: v })} />
+                <Label>{t('profiles.sheet.time')}</Label>
+                <TimeSelect key={p.unknownTime ? 'off' : 'on'} value={p.birthTime} disabled={p.unknownTime} onChange={(v) => set({ birthTime: v })} />
+                <label className="mt-3 flex cursor-pointer items-center gap-3 px-1 text-sm text-white/60">
+                  <input type="checkbox" className="h-4 w-4 accent-gold-400" checked={p.unknownTime} onChange={(e) => set({ unknownTime: e.target.checked, birthTime: '' })} />
+                  {t('profiles.sheet.unknown')}
+                </label>
               </div>
-              <label className="flex items-center gap-2 text-sm text-white/60">
-                <input type="checkbox" className="h-4 w-4 accent-gold-400" checked={p.unknownTime} onChange={(e) => set({ unknownTime: e.target.checked, birthTime: '' })} />
-                {t('profiles.sheet.unknown')}
-              </label>
-
               <div>
-                <span className="mb-1 block text-xs text-white/50">{t('profiles.sheet.city')}</span>
+                <Label>{t('profiles.sheet.city')}</Label>
                 <CitySearch place={p.place} onSelect={(place) => set({ place })} autoFocus={false} />
               </div>
             </div>
@@ -97,14 +81,6 @@ export default function AddProfileSheet({ open, onClose, onSave }) {
   )
 }
 
-function Pill({ active, onClick, children }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full px-3.5 py-1.5 text-sm ring-1 transition ${active ? 'bg-gold-400 font-semibold text-night-950 ring-gold-400' : 'bg-white/5 text-white/75 ring-white/10'}`}
-    >
-      {children}
-    </button>
-  )
+function Label({ children }) {
+  return <p className="mb-2 px-1 text-sm font-medium text-white/70">{children}</p>
 }

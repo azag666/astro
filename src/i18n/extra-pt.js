@@ -2,7 +2,7 @@
 // Mesclado por cima do dicionário-base. Tokens iguais: {var} e {masc|fem}.
 export default {
   focus: {
-    amor: { label: 'Amor e relacionamentos', short: 'amor', text: 'Vênus, Marte e a sua Casa 7 mostram como você ama, quem você atrai e por que o mesmo padrão insiste em voltar.' },
+    amor: { label: 'Amor e relacionamentos', short: 'amor', text: 'Sua Vênus mostra como você ama. Seu Marte, quem te atrai. E a sua Casa 7 guarda o tipo de pessoa que fica, e o motivo de o mesmo padrão voltar.' },
     dinheiro: { label: 'Dinheiro e prosperidade', short: 'dinheiro', text: 'Júpiter, Vênus e a sua Casa 2 mostram de onde o seu dinheiro vem, onde ele escapa e quando ele chega.' },
     carreira: { label: 'Carreira e propósito profissional', short: 'carreira', text: 'Seu Meio do Céu, Saturno e Marte revelam a sua vocação real e o que está travando o seu crescimento.' },
     espiritual: { label: 'Saúde espiritual e caminho de vida', short: 'caminho espiritual', text: 'A sua Lua, Netuno e o seu Sol mostram o que a sua alma veio viver e por que às vezes você se sente perdid{o|a}.' },
@@ -10,7 +10,7 @@ export default {
 
   intro: {
     byFocus: {
-      amor: { badge: 'Leitura amorosa gratuita', title: 'Não é azar no amor.', accent: 'É um padrão escrito no seu céu.', sub: 'Descubra por que você atrai sempre o mesmo tipo de pessoa, o que a sua Vênus pede e quais são os seus 3 dias mais magnéticos dos próximos 30 dias.' },
+      amor: { badge: 'Leitura amorosa gratuita', title: 'Não é azar no amor.', accent: 'É um padrão escrito no seu céu.', sub: 'Descubra por que você atrai sempre o mesmo tipo de pessoa, com quem você combina de verdade e quais são os seus 3 dias mais magnéticos dos próximos 30 dias.' },
       dinheiro: { badge: 'Diagnóstico financeiro gratuito', title: 'O dinheiro tem hora certa para chegar.', accent: 'O seu mapa sabe qual é.', sub: 'Veja de onde vem a sua prosperidade, onde o seu dinheiro escapa e as 3 datas de ouro financeiras dos próximos 30 dias, calculadas com a posição real dos planetas.' },
       carreira: { badge: 'Diagnóstico de carreira gratuito', title: 'Você não está no lugar errado por acaso.', accent: 'Seu mapa mostra para onde ir.', sub: 'Descubra a sua vocação real pelo seu Meio do Céu, o que trava o seu crescimento e os 3 melhores dias para agir nos próximos 30 dias.' },
       espiritual: { badge: 'Leitura espiritual gratuita', title: 'Esse vazio tem endereço.', accent: 'E o seu mapa sabe qual é.', sub: 'Entenda o que a sua alma veio viver, por que você se sente desconectad{o|a} e quais dias do próximo mês abrem portas para você.' },
@@ -27,7 +27,7 @@ export default {
     },
     insight: {
       eyebrow: 'Isso tem explicação',
-      amor: 'Padrões no amor quase nunca são azar. No mapa astral, eles aparecem na posição de Vênus, de Marte e da sua Casa 7. Quando você entende o que eles pedem, o padrão perde a força.',
+      amor: 'Padrões no amor quase nunca são azar. Eles aparecem na posição da sua Vênus, do seu Marte e da sua Casa 7. Daqui a pouco você vê o que cada um diz sobre você, e o que fica escondido.',
       dinheiro: 'Quem trabalha muito e não prospera quase sempre está com a energia no lugar errado. Júpiter e a sua Casa 2 mostram exatamente de onde o seu dinheiro vem e por onde ele escapa.',
       carreira: 'Esforço sem resultado costuma ser talento na direção errada. Seu Meio do Céu mostra onde você rende mais e Saturno mostra o que está te segurando.',
       espiritual: 'Esse cansaço da alma tem endereço no seu mapa. A sua Lua e Netuno mostram do que você precisa para voltar a se sentir inteir{o|a}.',
@@ -59,9 +59,9 @@ export default {
     readingTitle: 'Sua leitura de {focus}',
     factors: {
       amor: [
-        { point: 'venus', text: 'No amor, você se entrega {style}.' },
-        { point: 'mars', text: 'Você se sente atraíd{o|a} por quem age {style}.' },
-        { point: 'house7', fallback: 'moon', text: 'A pessoa certa para você age {style}.' },
+        { point: 'venus', text: 'Sua Vênus explica por que você ama {style}. O que ela pede em troca, e quase ninguém te dá, está no mapa completo.' },
+        { point: 'mars', text: 'Você se sente atraíd{o|a} por quem age {style}. Nem sempre é quem te faz bem, e o seu mapa mostra por quê.' },
+        { point: 'house7', fallback: 'moon', text: 'A pessoa que fica de verdade age {style}. O motivo de você atrair o oposto disso já aparece no seu mapa…' },
       ],
       dinheiro: [
         { point: 'jupiter', text: 'Sua sorte financeira cresce quando você age {style}.' },
@@ -85,7 +85,7 @@ export default {
       sub: 'Calculadas com o trânsito real dos planetas sobre o seu mapa. Anote.',
       transit: '{transit} em {type} com {natal} natal',
       meaning: {
-        amor: { jupiter: 'Sorte grande no amor: ótimo para conhecer alguém novo.', venus: 'Dia de magnetismo: você fica mais atraente e receptiv{o|a}.', sun: 'Dia de clareza: ótimo para conversar sobre a relação.', moon: 'Dia sensível: o coração fala mais alto, aproveite para se declarar.' },
+        amor: { jupiter: 'Júpiter abre portas no amor: dia favorável para conhecer alguém ou se permitir algo novo.', venus: 'Seu dia mais magnético: você fica mais atraente e receptiv{o|a}.', sun: 'Dia de clareza: bom para aquela conversa sobre a relação.', moon: 'Dia sensível: o coração fala mais alto. Bom para dizer o que sente.' },
         dinheiro: { jupiter: 'Janela de expansão: ótimo para negociar, pedir aumento ou investir.', venus: 'Dia de atração de dinheiro: vendas e propostas fluem melhor.', sun: 'Dia de visibilidade: mostre o seu trabalho e cobre o que vale.', moon: 'Dia de intuição financeira: confie no seu faro para oportunidades.' },
         carreira: { jupiter: 'Janela de crescimento: ótimo para entrevistas, propostas e começar projetos.', venus: 'Dia de boas relações: networking e parcerias rendem mais.', sun: 'Dia de destaque: seus resultados ficam mais visíveis.', moon: 'Dia de intuição: boas ideias aparecem, anote tudo.' },
         espiritual: { jupiter: 'Portal de expansão: ótimo para meditar, estudar e recomeçar.', venus: 'Dia de cura emocional: perdoe, limpe e se reconecte.', sun: 'Dia de força vital: sua energia está em alta.', moon: 'Dia de intuição aguçada: preste atenção nos sinais e nos sonhos.' },
@@ -141,7 +141,7 @@ export default {
         dominantWater: 'Use a sua Água: você rende mais quando confia na intuição. Seu primeiro sentimento costuma estar certo.',
       },
       focus: {
-        amor: 'Pare de esperar o outro mudar. Sua Vênus pede que você ame {style}, e quem não acompanha esse ritmo não é para você.',
+        amor: 'Pare de esperar o outro mudar. Sua Vênus pede que você ame {style}, e quem não acompanha esse ritmo dificilmente vai te fazer feliz.',
         dinheiro: 'Seu dinheiro trava quando você trabalha contra a sua natureza. Seu Júpiter pede que você ganhe dinheiro {style}.',
         carreira: 'Sua vocação não é um cargo, é um jeito de trabalhar. Seu mapa pede que você atue {style}.',
         espiritual: 'Sua paz não está fora. Sua Lua pede que você viva {style}, e é isso que reconecta a sua alma.',
@@ -176,7 +176,7 @@ export default {
       { title: 'Calendário das Datas de Ouro', text: 'Os seus melhores dias para {focus} em cada mês do próximo ano.' },
       { title: 'Carta Numerológica Pessoal', text: 'Seu número de vida, seu ano pessoal e o que eles pedem de você.' },
     ],
-    guides: { amor: 'Código do Amor', dinheiro: 'Código da Prosperidade', carreira: 'Código da Carreira', espiritual: 'Código da Alma' },
+    guides: { amor: 'Código do Amor e da Compatibilidade', dinheiro: 'Código da Prosperidade', carreira: 'Código da Carreira', espiritual: 'Código da Alma' },
     total: 'Valor total',
     today: 'Hoje, por apenas',
     bonusTag: 'Bônus',
@@ -184,7 +184,7 @@ export default {
 
   sales: {
     headlineByFocus: {
-      amor: '{name}, o seu mapa mostra por que o amor trava.',
+      amor: '{name}, o motivo de você atrair sempre o mesmo tipo de pessoa está no seu mapa.',
       dinheiro: '{name}, o seu mapa mostra onde o seu dinheiro está preso.',
       carreira: '{name}, o seu mapa mostra para onde a sua carreira deveria ir.',
       espiritual: '{name}, o seu mapa mostra o que a sua alma está pedindo.',
