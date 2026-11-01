@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { CalendarDaysIcon, ClockIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { UserIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import CitySearch from './CitySearch'
+import { DateSelect, TimeSelect } from './DateSelect'
 import { useI18n } from '../i18n'
 
 const EMPTY = { name: '', relation: 'partner', gender: 'f', birthDate: '', birthTime: '', unknownTime: false, place: null }
-const TODAY = new Date().toISOString().slice(0, 10)
 
 // Bottom sheet (mobile-first) para cadastrar o perfil de outra pessoa.
 export default function AddProfileSheet({ open, onClose, onSave }) {
@@ -68,27 +68,13 @@ export default function AddProfileSheet({ open, onClose, onSave }) {
                 ))}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="mb-1 block text-xs text-white/50">{t('profiles.sheet.date')}</span>
-                  <div className="relative">
-                    <CalendarDaysIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gold-300/70" />
-                    <input type="date" min="1920-01-01" max={TODAY} className="field pl-9 text-sm [color-scheme:dark]" value={p.birthDate} onChange={(e) => set({ birthDate: e.target.value })} />
-                  </div>
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-xs text-white/50">{t('profiles.sheet.time')}</span>
-                  <div className="relative">
-                    <ClockIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gold-300/70" />
-                    <input
-                      type="time"
-                      disabled={p.unknownTime}
-                      className="field pl-9 text-sm [color-scheme:dark] disabled:opacity-40"
-                      value={p.birthTime}
-                      onChange={(e) => set({ birthTime: e.target.value })}
-                    />
-                  </div>
-                </label>
+              <div>
+                <span className="mb-1 block text-xs text-white/50">{t('profiles.sheet.date')}</span>
+                <DateSelect value={p.birthDate} onChange={(v) => set({ birthDate: v })} />
+              </div>
+              <div>
+                <span className="mb-1 block text-xs text-white/50">{t('profiles.sheet.time')}</span>
+                <TimeSelect value={p.birthTime} disabled={p.unknownTime} onChange={(v) => set({ birthTime: v })} />
               </div>
               <label className="flex items-center gap-2 text-sm text-white/60">
                 <input type="checkbox" className="h-4 w-4 accent-gold-400" checked={p.unknownTime} onChange={(e) => set({ unknownTime: e.target.checked, birthTime: '' })} />
