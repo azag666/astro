@@ -136,6 +136,7 @@ function cobrancaSimulada(p) {
     pse: { kind: 'redirect', instructions: { checkout_url: 'https://example.com/pse/' + p.id } },
     cvu: { kind: 'bank_transfer', instructions: { cvu: '0000003' + n.slice(0, 15), beneficiary: 'Pagos Seguros SA' } },
     'mercado-pago': { kind: 'redirect', instructions: { checkout_url: 'https://example.com/mp/' + p.id } },
+    transferencia: { kind: 'redirect', instructions: { checkout_url: '/?c=' + p.country + '#/checkout' } },
     'qr-interoperable': { kind: 'qr_code', instructions: { copy_paste: '000201010211' + n } },
     whop: { kind: 'redirect', instructions: { checkout_url: '/?c=' + p.country + '#/checkout' } },
   }
@@ -352,7 +353,7 @@ function limparProps(props) {
 const ip = (req) => req.headers['cf-connecting-ip'] || req.headers['x-real-ip'] || req.socket.remoteAddress || ''
 
 // País do lead pelo IP (a Cloudflare manda CF-IPCountry); vai para a página antes de carregar
-const PAIS_POR_IP = { BR: 'br', MX: 'mx', CO: 'co', AR: 'ar', CN: 'cn' }
+const PAIS_POR_IP = { BR: 'br', MX: 'mx', CO: 'co', CL: 'cl', AR: 'ar', CN: 'cn' }
 
 const TIPOS = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.json': 'application/json', '.wasm': 'application/wasm', '.task': 'application/octet-stream', '.woff2': 'font/woff2', '.ico': 'image/x-icon' }
 

@@ -206,7 +206,7 @@ ${aba === 'funil' ? funilHtml() : ''}
     return `<div class="sub">${esc(r.periodo.de)} a ${esc(r.periodo.ate)} · pessoas únicas por passo</div>
 <form><input type="hidden" name="k" value="${k}">
 <input type="date" name="de" value="${esc(params.get('de') || r.periodo.de)}"><input type="date" name="ate" value="${esc(params.get('ate') || r.periodo.ate)}">
-<select name="pais"><option value="">Todos os países</option>${['br', 'mx', 'co', 'ar', 'cn'].map((p) => `<option ${params.get('pais') === p ? 'selected' : ''}>${p}</option>`).join('')}</select>
+<select name="pais"><option value="">Todos os países</option>${['br', 'mx', 'co', 'cl', 'ar', 'cn'].map((p) => `<option ${params.get('pais') === p ? 'selected' : ''}>${p}</option>`).join('')}</select>
 <input name="campanha" placeholder="utm_campaign" value="${esc(params.get('campanha') || '')}"><button>Filtrar</button></form>
 <div class="kpis"><div class="kpi">Vendas<b>${r.funil.paid || 0}</b></div><div class="kpi">Conversão<b>${pct(r.funil.paid || 0, r.funil.view || 0)}</b></div><div class="kpi">Faturamento<b style="font-size:15px">${receita}</b></div><div class="kpi">Pagamentos em aberto<b>${r.pedidosAbertos}</b></div></div>
 <div class="card">${barras}</div>
