@@ -4,8 +4,8 @@ import { CheckCircleIcon, MapPinIcon } from '@heroicons/react/24/outline'
 import { searchCity } from '../lib/astro'
 import { useI18n } from '../i18n'
 
-export default function CitySearch({ place, onSelect, autoFocus = true }) {
-  const { t, lang } = useI18n()
+export default function CitySearch({ place, onSelect, onPending, autoFocus = true }) {
+  const { t, lang, c } = useI18n()
   const [query, setQuery] = useState(place ? place.name : '')
   const [results, setResults] = useState([])
   const [status, setStatus] = useState('idle') // idle | loading | done | error
@@ -21,14 +21,24 @@ export default function CitySearch({ place, onSelect, autoFocus = true }) {
     let alive = true
     const timer = setTimeout(() => {
       searchCity(query, lang)
-        .then((r) => alive && (setResults(r), setStatus('done')))
+        .then((r) => {
+          if (!alive) return
+          // Cidades do país do lead primeiro (Curitiba BR antes de Curitiba MX)
+          const ordenadas = [...r].sort((a, b) => (b.cc === c.flag) - (a.cc === c.flag))
+          setResults(ordenadas)
+          setStatus('done')
+        })
         .catch(() => alive && setStatus('error'))
     }, 300)
     return () => {
       alive = false
       clearTimeout(timer)
     }
-  }, [query, lang, selected])
+  }, [query, lang, selected, c.flag])
+
+  useEffect(() => {
+    onPending?.({ query, first: results[0] || null })
+  }, [query, results, onPending])
 
   return (
     <div className="relative">

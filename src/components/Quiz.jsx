@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeftIcon,
@@ -40,6 +40,7 @@ import CitySearch from './CitySearch'
 import PalmScan from './PalmScan'
 import { track } from '../lib/track'
 import { DateSelect, TimeSelect } from './DateSelect'
+import { capitalPlace } from '../lib/astro'
 
 const ICONS = {
   gender: { f: UserIcon, m: UserIcon, n: UsersIcon },
@@ -52,7 +53,8 @@ const ICONS = {
   experience: { never: SparklesIcon, sign: SunIcon, done: BookOpenIcon },
 }
 
-const ALL_STEPS = ['gender', 'focus', 'situation', 'insight', 'agree1', 'agree2', 'experience', 'name', 'birthDate', 'whyMore', 'birthTime', 'city', 'palm', 'account']
+// Sem 'gender' e 'agree2' (01/nov): telas que derrubavam gente sem mudar o resultado
+const ALL_STEPS = ['focus', 'situation', 'insight', 'agree1', 'experience', 'name', 'birthDate', 'whyMore', 'birthTime', 'city', 'palm', 'account']
 
 const slide = {
   initial: (dir) => ({ opacity: 0, x: dir * 40, filter: 'blur(6px)' }),
@@ -66,6 +68,8 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
   const [step, setStep] = useState(0)
   const [dir, setDir] = useState(1)
   const [errors, setErrors] = useState({})
+  // Cidade digitada sem tocar na lista: usa a 1ª sugestão ou, sem nenhuma, a capital do país
+  const cityGuess = useRef({ query: '', first: null })
 
   const id = STEPS[step]
   const total = STEPS.length
@@ -185,10 +189,17 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
       break
     case 'city':
       content = (
-        <Form onSubmit={() => data.place && next()}>
+        <Form onSubmit={() => {
+            if (data.place) return next()
+            const p = cityGuess.current.first || (cityGuess.current.query.trim().length >= 2 ? capitalPlace(country, cityGuess.current.query) : null)
+            if (p) {
+              set({ place: p })
+              next()
+            }
+          }}>
           <Title title={t('quiz.city.title')} hint={t('quiz.city.hint')} />
-          <CitySearch place={data.place} onSelect={(place) => set({ place })} />
-          <Next disabled={!data.place} />
+          <CitySearch place={data.place} onSelect={(place) => set({ place })} onPending={(g) => (cityGuess.current = g)} />
+          <Next disabled={false} />
         </Form>
       )
       break

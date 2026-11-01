@@ -15,7 +15,7 @@ import ProCadastro from './components/pros/ProCadastro'
 import Login from './components/Login'
 import { addOrder, currentAccount, login as loginAccount, logout, saveAccount } from './lib/account'
 import { COUNTRIES, detectCountry, I18nProvider } from './i18n'
-import { sendLead, setTrackContext, track } from './lib/track'
+import { sendLead, setTrackContext, track, utm } from './lib/track'
 
 const SCREEN_EVENTS = { quiz: 'quiz_start', login: 'login', offer: 'offer_view', checkout: 'checkout_view', success: 'paid_view' }
 
@@ -138,7 +138,7 @@ export default function App() {
   }, [screen, offer])
 
   return (
-    <I18nProvider country={country} gender={data.gender}>
+    <I18nProvider country={country} gender={data.gender || (utm.utm_source === 'meta' ? 'f' : '')}>
       <Starfield />
       <AnimatePresence mode="wait">
         <motion.main key={screen} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>

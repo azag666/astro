@@ -42,6 +42,20 @@ export function quickSunSign(isoDate) {
   return signOf(lon)
 }
 
+// Coordenadas da capital quando a cidade não é encontrada: o fuso e a posição aproximada bastam
+const CAPITAIS = {
+  br: { lat: -15.79, lon: -47.88, tz: 'America/Sao_Paulo', cc: 'BR' },
+  mx: { lat: 19.43, lon: -99.13, tz: 'America/Mexico_City', cc: 'MX' },
+  co: { lat: 4.71, lon: -74.07, tz: 'America/Bogota', cc: 'CO' },
+  cl: { lat: -33.45, lon: -70.67, tz: 'America/Santiago', cc: 'CL' },
+  ar: { lat: -34.6, lon: -58.38, tz: 'America/Argentina/Buenos_Aires', cc: 'AR' },
+  cn: { lat: 39.9, lon: 116.4, tz: 'Asia/Shanghai', cc: 'CN' },
+}
+export function capitalPlace(country, typed) {
+  const c = CAPITAIS[country] || CAPITAIS.br
+  return { id: `aprox-${country}`, name: String(typed || '').trim(), region: '', ...c, approx: true }
+}
+
 export async function searchCity(query, lang = 'pt') {
   if (!query || query.trim().length < 2) return []
   const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query.trim())}&count=6&language=${lang}&format=json`
