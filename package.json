@@ -8,13 +8,16 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "setup:mediapipe": "mkdir -p public/mediapipe && cp node_modules/@mediapipe/tasks-vision/wasm/* public/mediapipe/ && curl -sL -o public/mediapipe/hand_landmarker.task https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+    "setup:mediapipe": "mkdir -p public/mediapipe && cp node_modules/@mediapipe/tasks-vision/wasm/* public/mediapipe/ && curl -sL -o public/mediapipe/hand_landmarker.task https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+    "server": "node --env-file-if-exists=.env server/index.mjs",
+    "start": "vite build && node --env-file-if-exists=.env server/index.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@mediapipe/tasks-vision": "^1.2.0",
     "astronomy-engine": "^2.1.19",
     "framer-motion": "^14.9.0",
+    "qrcode": "^1.5.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

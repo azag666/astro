@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeftIcon,
+  ArrowTopRightOnSquareIcon,
   BuildingLibraryIcon,
   CalendarDaysIcon,
   CheckIcon,
@@ -9,9 +10,11 @@ import {
   ClockIcon,
   CreditCardIcon,
   DevicePhoneMobileIcon,
+  ExclamationTriangleIcon,
   EnvelopeIcon,
   LockClosedIcon,
   MapPinIcon,
+  PencilSquareIcon,
   ShieldCheckIcon,
   UserIcon,
 } from '@heroicons/react/24/outline'
@@ -20,14 +23,36 @@ import Logo from './Logo'
 import { quickSunSign, SIGN_GLYPHS, SIGN_KEYS } from '../lib/astro'
 import { isEmail, maskCard, maskExpiry, maskPhone } from '../lib/format'
 import { useI18n, WALLETS } from '../i18n'
+import { htMethod } from '../i18n/paises.js'
+import { sid, track, utm } from '../lib/track'
+import QRCode from 'qrcode'
+
+const ORDER_KEY = 'ceu-natal-pedido'
+
+function savedOrder(country) {
+  try {
+    const o = JSON.parse(sessionStorage.getItem(ORDER_KEY) || 'null')
+    return o && o.country === country && o.status === 'pending' ? o : null
+  } catch {
+    return null
+  }
+}
 
 export default function Checkout({ data, setData, onBack, onPaid }) {
   const { t, money, c, country, walletName, walletNote } = useI18n()
+  const [off, setOff] = useState([])
+  const wallets = c.wallets.filter((w) => !off.includes(w))
   const [method, setMethod] = useState(c.wallets[0])
   const [bump, setBump] = useState(false)
   const [numBump, setNumBump] = useState(false)
   const [touched, setTouched] = useState(false)
-  const [stage, setStage] = useState('form')
+  const [order, setOrder] = useState(() => savedOrder(country))
+  const [stage, setStage] = useState(() => (order ? 'pending' : 'form'))
+  const [payError, setPayError] = useState('')
+  const [holder, setHolder] = useState(data.name)
+  const [editContact, setEditContact] = useState(false)
+  const live = !!htMethod(method, c.currency)
+  const askHolder = live && method === 'cvu'
   const [bank, setBank] = useState('')
   const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '', installments: '1' })
   const fromQuiz = !!data.birthDate && !!data.place
@@ -36,6 +61,8 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
   const total = c.price + (bump ? c.bump : 0) + (numBump ? c.numBump : 0)
   const signIdx = quickSunSign(data.birthDate)
   const phoneDigits = data.phone.replace(/\D/g, '')
+  const contactOk = data.name.trim().length >= 2 && isEmail(data.email) && phoneDigits.length >= c.phone.min
+  const showContact = !contactOk || editContact
 
   const errors = useMemo(() => {
     const e = {}
@@ -50,14 +77,55 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
       if (!/^\d{2}\/\d{2}$/.test(card.expiry)) e.expiry = t('checkout.errors.expiry')
       if (card.cvv.length < 3) e.cvv = t('checkout.errors.cvv')
     }
-    if (kind === 'redirect' && !bank) e.bank = t('checkout.errors.bank')
+    if (kind === 'redirect' && !live && !bank) e.bank = t('checkout.errors.bank')
+    if (askHolder && holder.trim().split(/\s+/).length < 2) e.holder = t('checkout.pay.errors.holder')
     return e
-  }, [data, card, kind, bank, phoneDigits, c, t])
+  }, [data, card, kind, bank, phoneDigits, c, t, live, askHolder, holder])
 
-  const submit = (ev) => {
+  const submit = async (ev) => {
     ev.preventDefault()
     setTouched(true)
-    if (Object.keys(errors).length) return
+    setPayError('')
+    if (Object.keys(errors).length) {
+      if (errors.name || errors.email || errors.phone) setEditContact(true)
+      return
+    }
+    track('pay_click', { method })
+    if (live) {
+      setStage('processing')
+      try {
+        const r = await fetch('/api/pedido', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sid,
+            country,
+            wallet: method,
+            bump,
+            numBump,
+            focus: data.focus,
+            utm,
+            customer: { name: askHolder ? holder.trim() : data.name.trim(), email: data.email.trim(), phone: `${c.phone.code} ${data.phone}` },
+          }),
+        })
+        const body = await r.json().catch(() => ({}))
+        if (!r.ok) throw Object.assign(new Error(body.error), { code: body.error })
+        const o = { ...body, country, bump, numBump }
+        sessionStorage.setItem(ORDER_KEY, JSON.stringify(o))
+        setOrder(o)
+        setStage('pending')
+        window.scrollTo({ top: 0 })
+      } catch (e) {
+        setStage('form')
+        const rest = wallets.filter((w) => w !== method)
+        if (e.code === 'method_unavailable' && rest.length) {
+          setOff((o) => [...o, method])
+          setMethod(rest[0])
+          setPayError(t('checkout.pay.unavailable'))
+        } else setPayError(t(e.code === 'rate_limited' ? 'checkout.pay.tooMany' : 'checkout.pay.error'))
+      }
+      return
+    }
     if (kind === 'card') {
       setStage('processing')
       setTimeout(() => onPaid({ total, bump, numBump }), 1800)
@@ -85,7 +153,22 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
       </header>
 
       <AnimatePresence mode="wait">
-        {stage === 'pending' ? (
+        {stage === 'pending' && order ? (
+          <LivePending
+            key="live"
+            order={order}
+            holder={holder}
+            onPaid={() => {
+              sessionStorage.removeItem(ORDER_KEY)
+              onPaid({ total: order.total, bump: order.bump, numBump: order.numBump })
+            }}
+            onBack={() => {
+              sessionStorage.removeItem(ORDER_KEY)
+              setOrder(null)
+              setStage('form')
+            }}
+          />
+        ) : stage === 'pending' ? (
           <Pending
             key="pending"
             kind={kind}
@@ -109,6 +192,16 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
           >
             <div className="order-2 space-y-6 lg:order-1">
               <Card step="1" title={t('checkout.step1')}>
+                {!showContact ? (
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl bg-white/[0.04] px-4 py-3.5 text-sm">
+                    <span className="flex items-center gap-2"><UserIcon className="h-4 w-4 text-gold-400" />{data.name}</span>
+                    <span className="flex items-center gap-2"><EnvelopeIcon className="h-4 w-4 text-gold-400" />{data.email}</span>
+                    <span className="flex items-center gap-2"><DevicePhoneMobileIcon className="h-4 w-4 text-gold-400" />{c.phone.code} {data.phone}</span>
+                    <button type="button" onClick={() => setEditContact(true)} className="ml-auto flex items-center gap-1 text-xs text-white/55 hover:text-white">
+                      <PencilSquareIcon className="h-4 w-4" /> {t('checkout.pay.edit')}
+                    </button>
+                  </div>
+                ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Input icon={UserIcon} placeholder={t('checkout.name')} value={data.name} onChange={set('name')} error={err('name')} autoComplete="name" className="sm:col-span-2" />
                   <Input icon={EnvelopeIcon} type="email" inputMode="email" placeholder={t('checkout.email')} value={data.email} onChange={set('email')} error={err('email')} autoComplete="email" />
@@ -133,6 +226,7 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
                     {err('phone') && <p className="mt-1 pl-1 text-xs text-rose-300">{errors.phone}</p>}
                   </div>
                 </div>
+                )}
               </Card>
 
               <Card step="2" title={t('checkout.step2')}>
@@ -153,11 +247,30 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
               </Card>
 
               <Card step="3" title={t('checkout.step3')}>
-                <div className={`grid gap-3 ${c.wallets.length > 3 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'}`}>
-                  {c.wallets.map((w) => (
-                    <WalletTab key={w} active={method === w} onClick={() => setMethod(w)} color={WALLETS[w].color} kind={WALLETS[w].kind} label={walletName(w)} note={walletNote(w)} />
+                <div className={`grid gap-3 ${wallets.length === 1 ? 'grid-cols-1' : wallets.length > 3 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'}`}>
+                  {wallets.map((w) => (
+                    <WalletTab
+                      key={w}
+                      active={method === w}
+                      onClick={() => {
+                        setMethod(w)
+                        setPayError('')
+                        track('method_select', { method: w })
+                      }}
+                      color={WALLETS[w].color}
+                      kind={WALLETS[w].kind}
+                      label={walletName(w)}
+                      note={walletNote(w)}
+                    />
                   ))}
                 </div>
+                {askHolder && (
+                  <div className="pt-4">
+                    <p className="mb-1.5 pl-1 text-xs font-medium text-white/60">{t('checkout.pay.holder')}</p>
+                    <Input icon={UserIcon} placeholder={t('checkout.pay.holder')} value={holder} onChange={(e) => setHolder(e.target.value)} error={err('holder')} autoComplete="name" />
+                    <p className="mt-1.5 pl-1 text-xs text-white/45">{t('checkout.pay.holderHint')}</p>
+                  </div>
+                )}
                 <AnimatePresence mode="wait" initial={false}>
                   {kind === 'card' && (
                     <motion.div key="card" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
@@ -176,7 +289,7 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
                       </div>
                     </motion.div>
                   )}
-                  {kind === 'redirect' && (
+                  {kind === 'redirect' && !live && (
                     <motion.div key="bank" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden pt-4">
                       <div className="relative">
                         <BuildingLibraryIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/35" />
@@ -192,8 +305,27 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
                 </AnimatePresence>
               </Card>
 
-              <Bump checked={bump} onChange={setBump} />
-              <Bump k="numBump" checked={numBump} onChange={setNumBump} />
+              <Bump
+                checked={bump}
+                onChange={(v) => {
+                  setBump(v)
+                  track('bump_toggle', { item: 'bump', on: v })
+                }}
+              />
+              <Bump
+                k="numBump"
+                checked={numBump}
+                onChange={(v) => {
+                  setNumBump(v)
+                  track('bump_toggle', { item: 'numBump', on: v })
+                }}
+              />
+
+              {payError && (
+                <p className="flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                  <ExclamationTriangleIcon className="h-5 w-5 shrink-0" /> {payError}
+                </p>
+              )}
 
               <button type="submit" disabled={stage === 'processing'} className="btn-gold w-full py-5 text-lg">
                 {stage === 'processing' ? (
@@ -458,9 +590,183 @@ function Pending({ kind, method, total, email, phone, bank, onPaid, onBack }) {
   )
 }
 
-function CopyButton({ copied, onClick, label, done }) {
+// Tela de pagamento real: mostra o que a HotTrack devolveu e confirma sozinha quando o pagamento cai
+function LivePending({ order, holder, onPaid, onBack }) {
+  const { t, money, walletName, c } = useI18n()
+  const [o, setO] = useState(order)
+  const [copied, setCopied] = useState('')
+  const [qr, setQr] = useState('')
+  const done = useRef(false)
+  const paidRef = useRef(onPaid)
+  useEffect(() => {
+    paidRef.current = onPaid
+  })
+  const pay = o.payment || {}
+  const ins = pay.instructions || {}
+  const wallet = walletName(o.wallet)
+  const color = WALLETS[o.wallet]?.color || '#e2c27d'
+  const code = ins.copy_paste || ''
+
+  useEffect(() => {
+    if (!code) return
+    QRCode.toDataURL(code, { margin: 1, width: 480 }).then(setQr).catch(() => {})
+  }, [code])
+
+  useEffect(() => {
+    let stop = false
+    const tick = async () => {
+      try {
+        const r = await fetch(`/api/pedido/${o.id}`)
+        if (!r.ok || stop) return
+        const d = await r.json()
+        setO((x) => ({ ...x, ...d }))
+        if (d.status === 'paid' && !done.current) {
+          done.current = true
+          paidRef.current()
+        }
+      } catch {}
+    }
+    tick()
+    const iv = setInterval(tick, 3000)
+    return () => {
+      stop = true
+      clearInterval(iv)
+    }
+  }, [o.id])
+
+  const copy = (text, what = 'code') => {
+    navigator.clipboard?.writeText(text)
+    setCopied(what)
+    track('code_copy', { method: o.wallet, what })
+    setTimeout(() => setCopied(''), 2000)
+  }
+
+  const simulate = async () => {
+    const r = await fetch(`/api/pedido/${o.id}/simular-pago`, { method: 'POST' })
+    if (r.ok && !done.current) {
+      done.current = true
+      onPaid()
+    }
+  }
+
+  const rows = (list) => (
+    <dl className="glass mt-8 divide-y divide-white/10 rounded-3xl text-left">
+      {list
+        .filter(([, v]) => v)
+        .map(([k, v, copyable]) => (
+          <div key={k} className="flex items-center justify-between gap-3 px-5 py-4">
+            <dt className="shrink-0 text-sm text-white/50">{k}</dt>
+            <dd className="flex min-w-0 items-center gap-2 font-mono font-semibold">
+              <span className="truncate">{v}</span>
+              {copyable && (
+                <button type="button" onClick={() => copy(String(v).replace(/\s/g, ''), k)} className="shrink-0 text-white/50 hover:text-white" aria-label={t('checkout.pending.copy')}>
+                  {copied === k ? <CheckIcon className="h-5 w-5 text-emerald-300" /> : <ClipboardDocumentIcon className="h-5 w-5" />}
+                </button>
+              )}
+            </dd>
+          </div>
+        ))}
+    </dl>
+  )
+
+  let body
+  if (o.status === 'expired') {
+    body = (
+      <>
+        <ClockIcon className="mx-auto h-14 w-14 text-white/40" />
+        <h2 className="mt-6 font-serif text-4xl font-semibold">{t('checkout.pay.expiredTitle')}</h2>
+        <p className="mt-2 text-white/60">{t('checkout.pay.expiredText')}</p>
+        <button type="button" onClick={onBack} className="btn-gold mt-8 w-full">{t('checkout.pay.newCharge')}</button>
+      </>
+    )
+  } else if (pay.kind === 'bank_transfer') {
+    const account = ins.clabe || ins.cvu
+    body = (
+      <>
+        <h2 className="font-serif text-4xl font-semibold">{t('checkout.pending.transferTitle')}</h2>
+        <p className="mt-2 text-white/60">{t('checkout.pay.exact')}</p>
+        {rows([
+          [ins.clabe ? t('checkout.pending.clabe') : 'CVU', account, true],
+          [t('checkout.pending.beneficiary'), ins.beneficiary],
+          [t('checkout.pay.bank'), ins.bank_name],
+          [t('checkout.pending.amount'), money(o.total), false],
+        ])}
+        <CopyButton copied={copied === 'main'} onClick={() => copy(account, 'main')} label={t('checkout.pending.copy')} done={t('checkout.pending.copied')} />
+        {ins.cvu && holder && <p className="mt-4 rounded-xl bg-gold-400/10 px-4 py-3 text-sm text-gold-200">{t('checkout.pay.fromHolder', { name: holder })}</p>}
+      </>
+    )
+  } else if (pay.kind === 'reference' || pay.kind === 'barcode') {
+    const ref = ins.reference || ins.barcode || ''
+    body = (
+      <>
+        <h2 className="font-serif text-4xl font-semibold">{t('checkout.pending.voucherTitle')}</h2>
+        <p className="mt-2 text-white/60">{t('checkout.pending.voucherText', { wallet })}</p>
+        <div className="mt-8 rounded-3xl bg-white p-6 text-night-950">
+          <p className="text-xs uppercase tracking-widest text-night-950/50">{t('checkout.pending.reference')}</p>
+          <p className="mt-1 break-all font-mono text-2xl font-bold tracking-wider">{ref.replace(/(\d{4})(?=\d)/g, '$1 ')}</p>
+          {ins.barcode_url && <img src={ins.barcode_url} alt="" className="mt-4 w-full" />}
+        </div>
+        <CopyButton copied={copied === 'main'} onClick={() => copy(ref, 'main')} label={t('checkout.pending.copy')} done={t('checkout.pending.copied')} />
+      </>
+    )
+  } else if (pay.kind === 'redirect' && ins.checkout_url) {
+    body = (
+      <>
+        <h2 className="font-serif text-4xl font-semibold">{t('checkout.pay.redirectTitle')}</h2>
+        <p className="mt-2 text-white/60">{t('checkout.pay.redirectText', { wallet })}</p>
+        <a href={ins.checkout_url} target="_blank" rel="noopener noreferrer" onClick={() => track('redirect_open', { method: o.wallet })} className="btn-gold mt-8 w-full">
+          {t('checkout.pay.open')} <ArrowTopRightOnSquareIcon className="h-5 w-5" />
+        </a>
+      </>
+    )
+  } else if (code || ins.qr_code || ins.llave) {
+    body = (
+      <>
+        <h2 className="font-serif text-4xl font-semibold">{t('checkout.pending.qrTitle')}</h2>
+        <p className="mt-2 text-white/60">{t(code && c.currency === 'BRL' ? 'checkout.pay.pixText' : 'checkout.pending.qrText', { wallet })}</p>
+        {ins.llave && rows([[t('checkout.pay.key'), ins.llave, true], [t('checkout.pay.bank'), ins.bank_name], [t('checkout.pending.amount'), money(o.total)]])}
+        {code && <CopyButton primary copied={copied === 'main'} onClick={() => copy(code, 'main')} label={t('checkout.pending.copy')} done={t('checkout.pending.copied')} />}
+        {(qr || ins.qr_code) && (
+          <div className={`mx-auto mt-6 w-64 rounded-3xl bg-white p-4 ${code ? 'hidden sm:block' : ''}`} style={{ boxShadow: `0 0 60px -10px ${color}` }}>
+            <img src={qr || ins.qr_code} alt="QR" className="w-full" />
+          </div>
+        )}
+      </>
+    )
+  } else {
+    body = (
+      <>
+        <motion.span className="mx-auto block h-14 w-14 rounded-full border-4 border-white/10" style={{ borderTopColor: color }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} />
+        <h2 className="mt-8 font-serif text-3xl font-semibold">{t('checkout.pay.preparing')}</h2>
+      </>
+    )
+  }
+
   return (
-    <button onClick={onClick} className="glass mt-6 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 font-medium transition hover:bg-white/10">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mx-auto max-w-md px-5 py-12 text-center">
+      {body}
+      {o.status !== 'expired' && (
+        <>
+          <p className="mt-6 font-serif text-3xl font-semibold text-gradient-gold">{money(o.total)}</p>
+          <div className="mt-4 flex items-center justify-center gap-2 text-sm text-white/55">
+            <motion.span className="h-2 w-2 shrink-0 rounded-full bg-gold-400" animate={{ opacity: [1, 0.2, 1] }} transition={{ repeat: Infinity, duration: 1.4 }} />
+            {t('checkout.pay.waiting')}
+          </div>
+          {o.simulado && (
+            <button type="button" onClick={simulate} className="glass mt-8 w-full rounded-2xl px-4 py-3 text-sm text-white/70 hover:text-white">
+              {t('checkout.pending.simulate')}
+            </button>
+          )}
+          <button type="button" onClick={onBack} className="mt-4 text-sm text-white/45 hover:text-white">{t('checkout.pending.change')}</button>
+        </>
+      )}
+    </motion.div>
+  )
+}
+
+function CopyButton({ copied, onClick, label, done, primary }) {
+  return (
+    <button type="button" onClick={onClick} className={primary ? 'btn-gold mt-6 w-full py-5 text-lg' : 'glass mt-6 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 font-medium transition hover:bg-white/10'}>
       {copied ? <CheckIcon className="h-5 w-5 text-emerald-300" /> : <ClipboardDocumentIcon className="h-5 w-5" />}
       {copied ? done : label}
     </button>

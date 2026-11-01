@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeftIcon,
@@ -40,6 +40,7 @@ import { isEmail, maskPhone } from '../lib/format'
 import { useI18n } from '../i18n'
 import CitySearch from './CitySearch'
 import PalmScan from './PalmScan'
+import { track } from '../lib/track'
 
 const ICONS = {
   gender: { f: UserIcon, m: UserIcon, n: UsersIcon },
@@ -69,6 +70,10 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
 
   const id = STEPS[step]
   const total = STEPS.length
+
+  useEffect(() => {
+    track('quiz_step', { i: step + 1, step: id })
+  }, [step, id])
   // Barra anda mais rápido no começo: sensação de progresso
   const progress = (1 - Math.pow(1 - (step + 1) / total, 1.5)) * 100
 

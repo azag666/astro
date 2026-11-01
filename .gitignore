@@ -26,3 +26,6 @@ dist-ssr
 # Modelo e WASM do MediaPipe (~65 MB) — recriar com: npm run setup:mediapipe
 public/mediapipe/
 .env*
+
+# Eventos, leads e pedidos gravados pelo servidor
+data/

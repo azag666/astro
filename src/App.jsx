@@ -10,6 +10,9 @@ import Success from './components/Success'
 import Login from './components/Login'
 import { addOrder, currentAccount, login as loginAccount, logout, saveAccount } from './lib/account'
 import { COUNTRIES, detectCountry, I18nProvider } from './i18n'
+import { sendLead, setTrackContext, track } from './lib/track'
+
+const SCREEN_EVENTS = { quiz: 'quiz_start', login: 'login', offer: 'offer_view', checkout: 'checkout_view', success: 'paid_view' }
 
 const EMPTY = {
   gender: '',
@@ -62,6 +65,18 @@ export default function App() {
   }, [data])
 
   useEffect(() => {
+    setTrackContext({ country, focus: data.focus })
+  }, [country, data.focus])
+
+  useEffect(() => {
+    track('view', { screen })
+  }, [])
+
+  useEffect(() => {
+    if (SCREEN_EVENTS[screen]) track(SCREEN_EVENTS[screen])
+  }, [screen])
+
+  useEffect(() => {
     localStorage.setItem('ceu-natal-country', country)
     document.documentElement.lang = COUNTRIES[country].locale
   }, [country])
@@ -104,6 +119,8 @@ export default function App() {
           {screen === 'quiz' && (
             <Quiz focusLocked={!!URL_FOCUS} data={data} setData={setData} onDone={() => {
                 setAccount(saveAccount(data, country))
+                sendLead({ ...data, phone: `${COUNTRIES[country].phone.code} ${data.phone}` }, country)
+                track('signup')
                 go('analyzing')
               }}
             />
