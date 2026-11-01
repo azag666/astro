@@ -1,0 +1,30 @@
+{
+  "name": "mapa-astral",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "setup:mediapipe": "mkdir -p public/mediapipe && cp node_modules/@mediapipe/tasks-vision/wasm/* public/mediapipe/ && curl -sL -o public/mediapipe/hand_landmarker.task https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@mediapipe/tasks-vision": "^1.2.0",
+    "astronomy-engine": "^2.1.19",
+    "framer-motion": "^14.9.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxlint": "^1.89.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.5"
+  }
+}
