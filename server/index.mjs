@@ -72,6 +72,7 @@ function cobrancaSimulada(p) {
     cvu: { kind: 'bank_transfer', instructions: { cvu: '0000003' + n.slice(0, 15), beneficiary: 'Pagos Seguros SA' } },
     'mercado-pago': { kind: 'redirect', instructions: { checkout_url: 'https://example.com/mp/' + p.id } },
     'qr-interoperable': { kind: 'qr_code', instructions: { copy_paste: '000201010211' + n } },
+    whop: { kind: 'redirect', instructions: { checkout_url: '/?c=' + p.country + '#/checkout' } },
   }
   return { id: 'sim_' + p.id, status: 'pending', payment: { method: p.method, ...(por[p.method] || por.pix), expires_at: null } }
 }
@@ -189,7 +190,7 @@ async function criarPedido(req, corpo) {
           body: {
             value_cents: p.cents,
             currency: p.currency,
-            method,
+            ...(method === 'whop' ? { gateway: 'whop', return_url: urlDeVolta(req, p) } : { method }),
             reference: 'cn-' + p.id,
             customer: { name: p.customer.name || undefined, email: p.customer.email || undefined },
           },
@@ -206,6 +207,12 @@ async function criarPedido(req, corpo) {
     const indisponivel = ['gateway_not_connected', 'method_not_enabled_at_gateway', 'method_not_for_currency', 'gateway_not_configured', 'invalid_currency'].includes(e.code)
     return [indisponivel ? 422 : 502, { error: indisponivel ? 'method_unavailable' : 'gateway_error' }]
   }
+}
+
+// Depois do checkout da Whop o lead volta para a tela de pagamento, que confirma sozinha
+function urlDeVolta(req, p) {
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').replace(/[^a-z0-9.:-]/gi, '')
+  return host && !/^(127\.|localhost)/.test(host) ? `https://${host}/?c=${p.country}#/checkout` : undefined
 }
 
 function publico(p) {

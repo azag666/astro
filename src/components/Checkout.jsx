@@ -112,6 +112,12 @@ export default function Checkout({ data, setData, onBack, onPaid }) {
         if (!r.ok) throw Object.assign(new Error(body.error), { code: body.error })
         const o = { ...body, country, bump, numBump }
         sessionStorage.setItem(ORDER_KEY, JSON.stringify(o))
+        const link = o.payment?.kind === 'redirect' && o.payment.instructions?.checkout_url
+        if (link && !o.simulado) {
+          track('redirect_open', { method })
+          window.location.href = link
+          return
+        }
         setOrder(o)
         setStage('pending')
         window.scrollTo({ top: 0 })
@@ -712,9 +718,9 @@ function LivePending({ order, holder, onPaid, onBack }) {
   } else if (pay.kind === 'redirect' && ins.checkout_url) {
     body = (
       <>
-        <h2 className="font-serif text-4xl font-semibold">{t('checkout.pay.redirectTitle')}</h2>
-        <p className="mt-2 text-white/60">{t('checkout.pay.redirectText', { wallet })}</p>
-        <a href={ins.checkout_url} target="_blank" rel="noopener noreferrer" onClick={() => track('redirect_open', { method: o.wallet })} className="btn-gold mt-8 w-full">
+        <h2 className="font-serif text-4xl font-semibold">{t(o.wallet === 'whop' ? 'checkout.pay.cardTitle' : 'checkout.pay.redirectTitle', { wallet })}</h2>
+        <p className="mt-2 text-white/60">{t(o.wallet === 'whop' ? 'checkout.pay.cardText' : 'checkout.pay.redirectText', { wallet })}</p>
+        <a href={ins.checkout_url} rel="noopener" onClick={() => track('redirect_open', { method: o.wallet })} className="btn-gold mt-8 w-full">
           {t('checkout.pay.open')} <ArrowTopRightOnSquareIcon className="h-5 w-5" />
         </a>
       </>
