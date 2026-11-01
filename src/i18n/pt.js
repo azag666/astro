@@ -111,6 +111,7 @@ export default {
       options: { yes: 'Totalmente', partly: 'Em parte', no: 'Não muito' },
     },
     experience: { title: 'Você já fez seu mapa astral completo?', hint: 'Assim ajustamos a profundidade da sua leitura.', options: { never: 'Nunca fiz', sign: 'Só conheço meu signo', done: 'Já fiz, quero algo mais profundo' } },
+    dados: { title: 'Seus dados de nascimento', hint: 'O seu mapa é calculado com a data, a hora e a cidade exatas.', name: 'Seu nome', date: 'Data de nascimento', time: 'Hora de nascimento', city: 'Cidade onde nasceu', cityError: 'Digite a cidade e escolha na lista' },
     name: { title: 'Como você se chama?', hint: 'Seu mapa é escrito para você, pelo seu nome.', placeholder: 'Seu primeiro nome' },
     birthDate: { title: '{name}, quando você nasceu?', hint: 'A data define a posição de cada planeta no seu céu.', reveal: 'Sol em {sign}', revealText: 'Você {trait}. Mas o Sol é só 1 dos 12 pontos do seu mapa.' },
     whyMore: {
@@ -186,7 +187,7 @@ export default {
       title: 'Um livro sobre você, escrito pelas estrelas',
       sub: 'Nada de horóscopo genérico. Cada página é calculada a partir do seu dia, hora e local de nascimento.',
       chapters: ['Seus talentos naturais', 'Seus bloqueios e como superá-los', 'Os ciclos da sua vida', 'Orientações práticas para cada área'],
-      badges: ['+90 páginas em PDF', 'Linguagem simples', 'Seu para sempre'],
+      badges: ['Planetas e 12 casas', 'Linguagem simples', 'Seu para sempre'],
       cover: 'Mapa Astral Completo',
       coverTitle: 'O seu céu',
       coverFoot: 'Céu Natal · Edição personalizada',
@@ -217,7 +218,7 @@ export default {
     offer: {
       eyebrow: 'Oferta especial',
       title: 'Seu Mapa Astral Completo',
-      items: ['Mapa Astral completo (+90 páginas)', 'Interpretação de todos os planetas e das 12 casas', 'Diagrama Energético dos próximos 12 meses', 'Carta Numerológica Pessoal', 'Entrega por e-mail em até 48h'],
+      items: ['Mapa Astral completo', 'Interpretação de todos os planetas e das 12 casas', 'Diagrama Energético dos próximos 12 meses', 'Carta Numerológica Pessoal', 'Entrega por e-mail em até 48h'],
       off: '{n}% off',
       once: 'Pagamento único.',
       cta: 'Quero meu mapa astral',
@@ -234,7 +235,7 @@ export default {
   faq: [
     { q: 'O que é um mapa astral?', a: 'É uma fotografia do céu no exato momento e local do seu nascimento. A posição de cada planeta nos signos e nas casas descreve sua personalidade, seus talentos e os ciclos da sua vida.' },
     { q: 'Não sei a hora em que nasci. Posso fazer?', a: 'Pode. Calculamos tudo que não depende da hora e usamos o método de retificação para o Ascendente. Você também pode nos enviar a hora depois.' },
-    { q: 'Quando e como eu recebo?', a: 'Em até 48 horas, por e-mail, em PDF com mais de 90 páginas. O arquivo é seu para sempre.' },
+    { q: 'Quando e como eu recebo?', a: 'Em até 48 horas, por e-mail, em PDF. O arquivo é seu para sempre.' },
     { q: 'Preciso entender de astrologia?', a: 'Não. Toda a interpretação é escrita em linguagem simples, com exemplos do dia a dia e orientações práticas.' },
     { q: 'E se eu não gostar?', a: 'Você tem 7 dias de garantia incondicional. Basta responder ao e-mail de entrega e devolvemos 100% do valor.' },
     { q: 'O pagamento é seguro?', a: 'Sim. O pagamento é processado com criptografia e não armazenamos dados do seu cartão.' },
@@ -272,7 +273,7 @@ export default {
     footnote: 'Garantia de 7 dias · Dados criptografados · Ambiente de demonstração',
     summary: 'Resumo do pedido',
     product: 'Mapa Astral Completo',
-    pages: '+90 páginas',
+    pages: 'Planetas, casas e aspectos',
     includes: ['Diagrama dos próximos 12 meses', 'Carta Numerológica Pessoal', 'Entrega em até 48h'],
     lineMain: 'Mapa Astral',
     lineBump: 'Revolução Solar',

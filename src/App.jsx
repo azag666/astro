@@ -21,7 +21,7 @@ const SCREEN_EVENTS = { quiz: 'quiz_start', login: 'login', offer: 'offer_view',
 
 const EMPTY = {
   gender: '',
-  focus: '',
+  focus: 'amor',
   situation: '',
   agree1: '',
   agree2: '',
@@ -60,7 +60,8 @@ export default function App() {
       // Aba nova ou volta depois: os dados do quiz ficam na conta salva no aparelho
       const daConta = currentAccount()?.data || {}
       const saved = { ...EMPTY, ...daConta, ...Object.fromEntries(Object.entries(daSessao).filter(([, v]) => v !== '' && v != null)) }
-      return URL_FOCUS ? { ...saved, focus: URL_FOCUS } : saved
+      // Oferta focada em amor (é o que mais recebe clique); ?f= da campanha ainda manda
+      return { ...saved, focus: URL_FOCUS || 'amor' }
     } catch {
       return EMPTY
     }
@@ -160,8 +161,11 @@ export default function App() {
           )}
           {screen === 'quiz' && (
             <Quiz focusLocked={!!URL_FOCUS} data={data} setData={setData} onDone={() => {
-                setAccount(saveAccount(data, country))
-                sendLead({ ...data, phone: `${COUNTRIES[country].phone.code} ${data.phone}` }, country)
+                // O quiz não tem mais caixa de aceite: o aviso está no texto da tela de contato
+                const lead = { ...data, consent: true }
+                setData(lead)
+                setAccount(saveAccount(lead, country))
+                sendLead({ ...lead, phone: `${COUNTRIES[country].phone.code} ${data.phone}` }, country)
                 track('signup')
                 go('analyzing')
               }}

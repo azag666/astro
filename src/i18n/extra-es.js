@@ -151,7 +151,7 @@ export default {
       more: 'Y las otras 11 ventanas del año están en tu carta astral completa.',
     },
     seen: 'Solo has visto el {pct}% de tu carta astral',
-    seenSub: 'El resto está en las +90 páginas de tu Carta Astral Completa: cada planeta, cada casa y tu calendario de los próximos 12 meses.',
+    seenSub: 'El resto está en tu Carta Astral Completa: cada planeta, cada casa y tu calendario de los próximos 12 meses.',
   },
 
   engine: {
@@ -170,7 +170,7 @@ export default {
     eyebrow: 'Tu paquete',
     title: 'Todo lo que recibes hoy',
     items: [
-      { title: 'Carta Astral Completa', text: '+90 páginas: todos los planetas, las 12 casas, los aspectos y tu retrato completo.' },
+      { title: 'Carta Astral Completa', text: 'Todos los planetas, las 12 casas, los aspectos y tu retrato completo.' },
       { title: 'Predicción de los próximos 12 meses', text: 'Diagrama energético mes a mes, con fases de impulso y de cuidado.' },
       { title: '{guide}', text: 'Una guía exclusiva de {focus}, hecha a partir de tu carta astral.' },
       { title: 'Calendario de Fechas de Oro', text: 'Tus mejores días para el {focus} en cada mes del próximo año.' },

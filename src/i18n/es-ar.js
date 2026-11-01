@@ -55,6 +55,7 @@ export default {
       amor: 'Los patrones en el amor casi nunca son mala suerte. En la carta astral aparecen en la posición de Venus, de Marte y de tu Casa 7, y cambian por completo cuando entendés lo que te están pidiendo.',
     },
     agree: { title: '¿Te identificás con esta frase?' },
+    dados: { title: 'Tus datos de nacimiento', hint: 'Tu carta se calcula con la fecha, la hora y la ciudad exactas.', name: 'Tu nombre', date: 'Fecha de nacimiento', time: 'Hora de nacimiento', city: 'Ciudad donde naciste', cityError: 'Escribí la ciudad y elegila en la lista' },
     name: { title: '¿Cómo te llamás?', hint: 'Tu carta se escribe para vos, con tu nombre.' },
     birthDate: { revealText: 'Vos {trait}. Pero el Sol es solo 1 de los 12 puntos de tu carta.' },
     birthTime: { unknownNote: 'No hay problema. Calculamos todo lo que no depende de la hora, y podés enviarla después.' },
@@ -100,7 +101,7 @@ export default {
   faq: [
     { q: '¿Qué es una carta astral?', a: 'Es una fotografía del cielo en el momento y lugar exactos de tu nacimiento. La posición de cada planeta en los signos y en las casas describe tu personalidad, tus talentos y los ciclos de tu vida.' },
     { q: 'No sé a qué hora nací. ¿La puedo hacer?', a: 'Sí. Calculamos todo lo que no depende de la hora y usamos el método de rectificación para el Ascendente. También podés enviarnos la hora después.' },
-    { q: '¿Cuándo y cómo la recibo?', a: 'En máximo 48 horas, por e-mail, en un PDF de más de 90 páginas. El archivo es tuyo para siempre.' },
+    { q: '¿Cuándo y cómo la recibo?', a: 'En máximo 48 horas, por e-mail, en PDF. El archivo es tuyo para siempre.' },
     { q: '¿Necesito saber de astrología?', a: 'No. Toda la interpretación está escrita en lenguaje sencillo, con ejemplos de la vida diaria y consejos prácticos.' },
     { q: '¿Y si no me gusta?', a: 'Tenés 7 días de garantía incondicional. Solo respondé al e-mail de entrega y te devolvemos el 100% de tu dinero.' },
     { q: '¿El pago es seguro?', a: 'Sí. El pago se procesa con cifrado y no almacenamos los datos de tu tarjeta.' },

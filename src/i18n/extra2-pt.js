@@ -8,6 +8,7 @@ export default {
       hint: 'Seu diagnóstico fica salvo na sua área. Avisamos no WhatsApp antes de cada uma das suas datas de ouro.',
       email: 'Seu melhor e-mail',
       phone: 'WhatsApp com DDD',
+      consentNote: 'Ao continuar, você recebe o seu diagnóstico e os avisos das suas datas por e-mail e WhatsApp.',
       consent: 'Aceito receber meu diagnóstico e avisos das minhas datas por e-mail e WhatsApp.',
       cta: 'Criar acesso e ver meu diagnóstico',
       passwordless: 'Sem senha. Você entra depois com o seu e-mail ou WhatsApp.',

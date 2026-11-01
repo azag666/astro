@@ -53,8 +53,8 @@ const ICONS = {
   experience: { never: SparklesIcon, sign: SunIcon, done: BookOpenIcon },
 }
 
-// Sem 'gender' e 'agree2' (01/nov): telas que derrubavam gente sem mudar o resultado
-const ALL_STEPS = ['focus', 'situation', 'insight', 'agree1', 'experience', 'name', 'birthDate', 'whyMore', 'birthTime', 'city', 'palm', 'account']
+// Só os dados do mapa numa página e o contato em outra (01/nov): as perguntas do quiz derrubavam gente
+const ALL_STEPS = ['dados', 'account']
 
 const slide = {
   initial: (dir) => ({ opacity: 0, x: dir * 40, filter: 'blur(6px)' }),
@@ -173,6 +173,65 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
         <Interstitial icon={ExclamationTriangleIcon} eyebrow={t('quiz.whyMore.eyebrow')} title={t('quiz.whyMore.title')} text={t('quiz.whyMore.text')} cta={t('quiz.whyMore.cta')} onNext={next} />
       )
       break
+    case 'dados': {
+      // Tudo que a pessoa preenche numa página só: nome, data, hora e cidade
+      const ok = data.name.trim().length >= 2 && data.birthDate && (data.birthTime || data.unknownTime)
+      const submit = () => {
+        if (!ok) return
+        if (data.place) return next()
+        const p = cityGuess.current.first || (cityGuess.current.query.trim().length >= 2 ? capitalPlace(country, cityGuess.current.query) : null)
+        if (p) {
+          set({ place: p })
+          next()
+        } else setErrors({ city: true })
+      }
+      content = (
+        <Form onSubmit={submit}>
+          <Title title={t('quiz.dados.title')} hint={t('quiz.dados.hint')} />
+          <div className="space-y-5">
+            <div>
+              <Label>{t('quiz.dados.name')}</Label>
+              <Field icon={UserIcon}>
+                <input autoFocus autoComplete="given-name" className="field pl-12" placeholder={t('quiz.name.placeholder')} value={data.name} onChange={(e) => set({ name: e.target.value })} />
+              </Field>
+            </div>
+            <div>
+              <Label>{t('quiz.dados.date')}</Label>
+              <DateSelect value={data.birthDate} onChange={(birthDate) => set({ birthDate })} />
+              {signKey && (
+                <p className="mt-2 px-1 text-sm text-gold-300">
+                  {SIGN_GLYPHS[signIdx]} {t('quiz.birthDate.reveal', { sign: t(`signs.${signKey}.name`) })}
+                </p>
+              )}
+            </div>
+            <div>
+              <Label>{t('quiz.dados.time')}</Label>
+              <TimeSelect key={data.unknownTime ? 'off' : 'on'} disabled={data.unknownTime} value={data.birthTime} onChange={(birthTime) => set({ birthTime })} />
+              <label className="mt-3 flex cursor-pointer items-center gap-3 px-1 text-sm text-white/60">
+                <input type="checkbox" className="h-4 w-4 accent-gold-400" checked={data.unknownTime} onChange={(e) => set({ unknownTime: e.target.checked, birthTime: '' })} />
+                {t('quiz.birthTime.unknown')}
+              </label>
+              {data.unknownTime && <p className="mt-2 px-1 text-xs text-white/45">{t('quiz.birthTime.unknownNote')}</p>}
+            </div>
+            <div>
+              <Label>{t('quiz.dados.city')}</Label>
+              <CitySearch
+                autoFocus={false}
+                place={data.place}
+                onSelect={(place) => {
+                  setErrors({})
+                  set({ place })
+                }}
+                onPending={(g) => (cityGuess.current = g)}
+              />
+              {errors.city && <p className="mt-1 pl-1 text-xs text-rose-300">{t('quiz.dados.cityError')}</p>}
+            </div>
+          </div>
+          <Next disabled={!ok} />
+        </Form>
+      )
+      break
+    }
     case 'birthTime':
       content = (
         <Form onSubmit={() => (data.birthTime || data.unknownTime) && next()}>
@@ -226,8 +285,8 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
         const e = {}
         if (!isEmail(data.email)) e.email = t('quiz.account.errors.email')
         if (!phoneOk) e.phone = t('quiz.account.errors.phone')
-        if (!data.consent) e.consent = t('quiz.account.errors.consent')
         setErrors(e)
+        // Sem caixa de aceite: o aviso fica no texto abaixo do botão, e o App grava consent: true
         if (!Object.keys(e).length) next()
       }
       content = (
@@ -266,13 +325,9 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
               </div>
               {errors.phone && <p className="mt-1 pl-1 text-xs text-rose-300">{errors.phone}</p>}
             </div>
-            <label className="flex cursor-pointer items-start gap-3 px-1 pt-1 text-sm text-white/65">
-              <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-gold-400" checked={!!data.consent} onChange={(e) => set({ consent: e.target.checked })} />
-              {t('quiz.account.consent')}
-            </label>
-            {errors.consent && <p className="pl-1 text-xs text-rose-300">{errors.consent}</p>}
           </div>
           <Next label={t('quiz.account.cta')} />
+          <p className="mt-3 px-1 text-center text-xs text-white/45">{t('quiz.account.consentNote')}</p>
           <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-white/45">
             <KeyIcon className="h-3.5 w-3.5" /> {t('quiz.account.passwordless')}
           </p>
@@ -284,6 +339,8 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
 
   return (
     <div className="mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-5 pb-10 pt-6">
+      {/* Com uma página só, a barra de progresso mostraria 100% logo de cara */}
+      {total > 1 && (
       <div className="mb-8 flex items-center gap-4">
         <button
           onClick={() => step > 0 && go(step - 1)}
@@ -301,6 +358,7 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
         </div>
         <span className="w-10 text-right text-xs tabular-nums text-white/50">{Math.round(progress)}%</span>
       </div>
+      )}
 
       <div className="relative flex-1">
         <AnimatePresence mode="wait" custom={dir}>
@@ -327,6 +385,11 @@ export default function Quiz({ data, setData, onDone, focusLocked }) {
 }
 
 const firstName = (n) => (n || '').trim().split(/\s+/)[0]
+
+
+function Label({ children }) {
+  return <p className="mb-2 px-1 text-sm font-medium text-white/70">{children}</p>
+}
 
 function Title({ title, hint }) {
   return (

@@ -151,7 +151,7 @@ export default {
       more: 'E as outras 11 janelas do ano estão no seu mapa completo.',
     },
     seen: 'Você viu só {pct}% do seu mapa',
-    seenSub: 'O resto está nas +90 páginas do seu Mapa Astral Completo: cada planeta, cada casa e o seu calendário dos próximos 12 meses.',
+    seenSub: 'O resto está no seu Mapa Astral Completo: cada planeta, cada casa e o seu calendário dos próximos 12 meses.',
   },
 
   engine: {
@@ -170,7 +170,7 @@ export default {
     eyebrow: 'O seu pacote',
     title: 'Tudo o que você recebe hoje',
     items: [
-      { title: 'Mapa Astral Completo', text: '+90 páginas: todos os planetas, as 12 casas, aspectos e o seu retrato completo.' },
+      { title: 'Mapa Astral Completo', text: 'Todos os planetas, as 12 casas, aspectos e o seu retrato completo.' },
       { title: 'Previsão dos próximos 12 meses', text: 'Diagrama energético mês a mês, com fases de alta e de cuidado.' },
       { title: '{guide}', text: 'Um guia exclusivo para {focus}, feito a partir do seu mapa.' },
       { title: 'Calendário das Datas de Ouro', text: 'Os seus melhores dias para {focus} em cada mês do próximo ano.' },

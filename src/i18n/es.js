@@ -111,6 +111,7 @@ export default {
       options: { yes: 'Totalmente', partly: 'En parte', no: 'No mucho' },
     },
     experience: { title: '¿Ya hiciste tu carta astral completa?', hint: 'Así ajustamos la profundidad de tu lectura.', options: { never: 'Nunca la he hecho', sign: 'Solo conozco mi signo', done: 'Ya la hice, quiero algo más profundo' } },
+    dados: { title: 'Tus datos de nacimiento', hint: 'Tu carta se calcula con la fecha, la hora y la ciudad exactas.', name: 'Tu nombre', date: 'Fecha de nacimiento', time: 'Hora de nacimiento', city: 'Ciudad donde naciste', cityError: 'Escribe la ciudad y elígela en la lista' },
     name: { title: '¿Cómo te llamas?', hint: 'Tu carta se escribe para ti, con tu nombre.', placeholder: 'Tu primer nombre' },
     birthDate: { title: '{name}, ¿cuándo naciste?', hint: 'La fecha define la posición de cada planeta en tu cielo.', reveal: 'Sol en {sign}', revealText: 'Tú {trait}. Pero el Sol es solo 1 de los 12 puntos de tu carta.' },
     whyMore: {
@@ -186,7 +187,7 @@ export default {
       title: 'Un libro sobre ti, escrito por las estrellas',
       sub: 'Nada de horóscopos genéricos. Cada página se calcula a partir de tu día, hora y lugar de nacimiento.',
       chapters: ['Tus talentos naturales', 'Tus bloqueos y cómo superarlos', 'Los ciclos de tu vida', 'Consejos prácticos para cada área'],
-      badges: ['+90 páginas en PDF', 'Lenguaje sencillo', 'Tuyo para siempre'],
+      badges: ['Planetas y 12 casas', 'Lenguaje sencillo', 'Tuyo para siempre'],
       cover: 'Carta Astral Completa',
       coverTitle: 'Tu cielo',
       coverFoot: 'Céu Natal · Edición personalizada',
@@ -217,7 +218,7 @@ export default {
     offer: {
       eyebrow: 'Oferta especial',
       title: 'Tu Carta Astral Completa',
-      items: ['Carta Astral completa (+90 páginas)', 'Interpretación de todos los planetas y las 12 casas', 'Diagrama Energético de los próximos 12 meses', 'Carta Numerológica Personal', 'Entrega por e-mail en máximo 48 h'],
+      items: ['Carta Astral completa', 'Interpretación de todos los planetas y las 12 casas', 'Diagrama Energético de los próximos 12 meses', 'Carta Numerológica Personal', 'Entrega por e-mail en máximo 48 h'],
       off: '{n}% de descuento',
       once: 'Pago único.',
       cta: 'Quiero mi carta astral',
@@ -234,7 +235,7 @@ export default {
   faq: [
     { q: '¿Qué es una carta astral?', a: 'Es una fotografía del cielo en el momento y lugar exactos de tu nacimiento. La posición de cada planeta en los signos y en las casas describe tu personalidad, tus talentos y los ciclos de tu vida.' },
     { q: 'No sé a qué hora nací. ¿Puedo hacerla?', a: 'Sí. Calculamos todo lo que no depende de la hora y usamos el método de rectificación para el Ascendente. También puedes enviarnos la hora después.' },
-    { q: '¿Cuándo y cómo la recibo?', a: 'En máximo 48 horas, por e-mail, en un PDF de más de 90 páginas. El archivo es tuyo para siempre.' },
+    { q: '¿Cuándo y cómo la recibo?', a: 'En máximo 48 horas, por e-mail, en PDF. El archivo es tuyo para siempre.' },
     { q: '¿Necesito saber de astrología?', a: 'No. Toda la interpretación está escrita en lenguaje sencillo, con ejemplos de la vida diaria y consejos prácticos.' },
     { q: '¿Y si no me gusta?', a: 'Tienes 7 días de garantía incondicional. Solo responde al e-mail de entrega y te devolvemos el 100% de tu dinero.' },
     { q: '¿El pago es seguro?', a: 'Sí. El pago se procesa con cifrado y no almacenamos los datos de tu tarjeta.' },
@@ -272,7 +273,7 @@ export default {
     footnote: 'Garantía de 7 días · Datos cifrados · Entorno de demostración',
     summary: 'Resumen del pedido',
     product: 'Carta Astral Completa',
-    pages: '+90 páginas',
+    pages: 'Planetas, casas y aspectos',
     includes: ['Diagrama de los próximos 12 meses', 'Carta Numerológica Personal', 'Entrega en máximo 48 h'],
     lineMain: 'Carta Astral',
     lineBump: 'Revolución Solar',
