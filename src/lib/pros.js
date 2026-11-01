@@ -12,53 +12,49 @@ const PERSONAS = [
 ]
 const CORES = PERSONAS.map(({ from, to }) => ({ from, to }))
 
-let cache = null
-let pedido = null
-function buscar() {
-  if (!pedido) {
-    pedido = fetch('/api/especialistas')
+// Uma lista por idioma: o servidor já devolve bio e especialidade traduzidas
+const cache = {}
+const pedidos = {}
+function buscar(lang) {
+  if (!pedidos[lang]) {
+    pedidos[lang] = fetch(`/api/especialistas?lang=${lang}`)
       .then((r) => (r.ok ? r.json() : { especialistas: [] }))
-      .then((d) => (cache = d.especialistas || []))
-      .catch(() => (cache = []))
+      .then((d) => (cache[lang] = d.especialistas || []))
+      .catch(() => (cache[lang] = []))
   }
-  return pedido
+  return pedidos[lang]
 }
 
-export function recarregarEspecialistas() {
-  pedido = null
-  return buscar()
+export function recarregarEspecialistas(lang) {
+  delete pedidos[lang]
+  return buscar(lang)
 }
 
 export function useEspecialistas() {
   const { t, lang } = useI18n()
-  const [lista, setLista] = useState(cache)
+  const [lista, setLista] = useState(cache[lang] || null)
   useEffect(() => {
     let vivo = true
-    buscar().then((l) => vivo && setLista(l))
+    buscar(lang).then((l) => vivo && setLista(l))
     return () => {
       vivo = false
     }
-  }, [])
+  }, [lang])
 
   if (lista && lista.length) {
-    return lista.map((e, i) => {
-      // Versão do idioma cadastrada no painel; o que faltar fica em português
-      const tr = (lang !== 'pt' && e.traducoes?.[lang]) || {}
-      return {
-        id: e.id,
-        name: e.nome,
-        role: tr.especialidade || e.especialidade,
-        bio: tr.bio || e.bio,
-        tags: tr.especialidades?.length ? tr.especialidades : e.especialidades || [],
-        // Para achar a especialista da dor pelas palavras em português
-        busca: [e.especialidade, ...(e.especialidades || [])].join(' '),
-        foto: e.foto || null,
-        glyph: e.nome.trim()[0]?.toUpperCase() || '✦',
-        ...CORES[i % CORES.length],
-        stats: e.avaliacoes ? { nota: e.nota, avaliacoes: e.avaliacoes, exemplo: false } : null,
-        real: true,
-      }
-    })
+    return lista.map((e, i) => ({
+      id: e.id,
+      name: e.nome,
+      role: e.especialidade,
+      bio: e.bio,
+      tags: e.especialidades || [],
+      busca: e.busca || '',
+      foto: e.foto || null,
+      glyph: e.nome.trim()[0]?.toUpperCase() || '✦',
+      ...CORES[i % CORES.length],
+      stats: e.avaliacoes ? { nota: e.nota, avaliacoes: e.avaliacoes, exemplo: false } : null,
+      real: true,
+    }))
   }
   const info = t('pros.list')
   return PERSONAS.map((p) => ({ ...p, ...info[p.id], stats: detalhesDoPro(p.id), real: false }))

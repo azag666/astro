@@ -9,16 +9,17 @@ const CORES = ['#f5c76b', '#f59ab8', '#a78bfa', '#6ee7b7', '#7dd3fc']
 // Avaliações aprovadas no /painel (+ as reais de src/data/avaliacoes.js). Sem nenhuma, só a maquete
 // (localhost ou ?mock=1, com selo). pro: id da especialista; '' = só do Céu Natal; undefined = todas.
 export default function Reviews({ pro, title, limit = 8, grid = false }) {
-  const { t, country } = useI18n()
+  const { t, country, lang } = useI18n()
   const [doServidor, setDoServidor] = useState([])
 
   useEffect(() => {
-    const q = pro === undefined ? '' : `?pro=${encodeURIComponent(pro)}`
-    fetch(`/api/avaliacoes${q}`)
+    // O servidor devolve o texto já traduzido para o idioma da página
+    const q = pro === undefined ? '' : `&pro=${encodeURIComponent(pro)}`
+    fetch(`/api/avaliacoes?lang=${lang}${q}`)
       .then((r) => (r.ok ? r.json() : { avaliacoes: [] }))
       .then((d) => setDoServidor(d.avaliacoes || []))
       .catch(() => {})
-  }, [pro])
+  }, [pro, lang])
 
   const reais = [...doServidor, ...doArquivo.filter((a) => pro === undefined || (a.pro || '') === pro)]
   const maquete = reais.length ? null : daMaquete({ pais: country, pro: pro || undefined })

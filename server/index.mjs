@@ -13,6 +13,7 @@ import { COUNTRIES, htMethod, orderTotal } from '../src/i18n/paises.js'
 import { painelHtml, resumoDoFunil } from './painel.mjs'
 import { capiLigada, evento, lembrar, pixelId } from './capi.mjs'
 import { csvDeJornadas, jornadas } from './jornadas.mjs'
+import { criarTradutor } from './traduzir.mjs'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const DIST = join(ROOT, 'dist')
@@ -82,6 +83,7 @@ function carregar(nome) {
 }
 const avaliacoes = carregar('avaliacoes.jsonl')
 const especialistas = carregar('especialistas.jsonl')
+const tradutor = criarTradutor(DATA)
 const novoId = () => randomUUID().replace(/-/g, '').slice(0, 12)
 
 function notaDe(proId) {
@@ -92,11 +94,28 @@ function notaDe(proId) {
 
 const aprovada = (e) => (e.status || 'aprovada') === 'aprovada' && e.ativo !== false && !e.removido
 
-function especialistasPublicos() {
-  return [...especialistas.mapa.values()]
-    .filter(aprovada)
-    .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || a.criadoEm.localeCompare(b.criadoEm))
-    .map((e) => ({ id: e.id, nome: e.nome, especialidade: e.especialidade, especialidades: e.especialidades || [], bio: e.bio, traducoes: e.traducoes || {}, foto: e.foto || null, ...notaDe(e.id) }))
+const especialistasAprovadas = () =>
+  [...especialistas.mapa.values()].filter(aprovada).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || a.criadoEm.localeCompare(b.criadoEm))
+const textosDaEspecialista = (e) => [e.especialidade, e.bio, ...(e.especialidades || [])]
+
+// No idioma da página: o que foi escrito à mão no painel vale; o resto é traduzido sozinho (o cadastro é em português)
+const IDIOMAS_DO_CADASTRO = ['es', 'zh']
+function especialistasPublicos(lang) {
+  const tr = (x) => (IDIOMAS_DO_CADASTRO.includes(lang) ? tradutor.traduzir(x, lang) : x)
+  return especialistasAprovadas().map((e) => {
+    const mao = e.traducoes?.[lang] || {}
+    return {
+      id: e.id,
+      nome: e.nome,
+      especialidade: mao.especialidade || tr(e.especialidade),
+      especialidades: mao.especialidades?.length ? mao.especialidades : (e.especialidades || []).map(tr),
+      bio: mao.bio || tr(e.bio),
+      // Especialidade original, para achar a especialista da dor pelas palavras-chave
+      busca: [e.especialidade, ...(e.especialidades || [])].join(' '),
+      foto: e.foto || null,
+      ...notaDe(e.id),
+    }
+  })
 }
 
 // Foto em data URL (jpeg/png/webp, até ~1,5 MB): grava em DATA/fotos e devolve o caminho público
@@ -604,16 +623,20 @@ createServer(async (req, res) => {
     }
 
     if (url.pathname === '/api/especialistas' && req.method === 'GET') {
-      return json(res, 200, { especialistas: especialistasPublicos() })
+      const lang = url.searchParams.get('lang')
+      if (IDIOMAS_DO_CADASTRO.includes(lang)) await tradutor.preparar(especialistasAprovadas().flatMap(textosDaEspecialista), lang)
+      return json(res, 200, { especialistas: especialistasPublicos(lang) })
     }
 
     if (url.pathname === '/api/avaliacoes' && req.method === 'GET') {
       const pro = url.searchParams.get('pro')
-      const lista = [...avaliacoes.mapa.values()]
+      const lang = url.searchParams.get('lang')
+      const aprovadas = [...avaliacoes.mapa.values()]
         .filter((a) => a.status === 'aprovada' && (pro === null ? true : pro === '' ? !a.pro : a.pro === pro))
         .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))
         .slice(0, 100)
-        .map(({ id, nome, nota, texto, pro: p, pais, verificada, criadoEm }) => ({ id, nome, nota, texto, pro: p, pais, verificada, criadoEm }))
+      await tradutor.preparar(aprovadas.map((a) => a.texto), lang)
+      const lista = aprovadas.map(({ id, nome, nota, texto, pro: p, pais, verificada, criadoEm }) => ({ id, nome, nota, texto: tradutor.traduzir(texto, lang), pro: p, pais, verificada, criadoEm }))
       return json(res, 200, { avaliacoes: lista })
     }
 
@@ -675,6 +698,7 @@ createServer(async (req, res) => {
         const a = avaliacoes.mapa.get(String(b.id || ''))
         if (!a || !['aprovada', 'recusada', 'pendente'].includes(b.status)) return json(res, 400, { error: 'invalid' })
         avaliacoes.salvar({ ...a, status: b.status, moderadaEm: new Date().toISOString() })
+        if (b.status === 'aprovada') tradutor.adiantar([a.texto])
         return json(res, 200, { ok: true })
       }
       if (url.pathname === '/api/painel/especialista') {
@@ -695,6 +719,7 @@ createServer(async (req, res) => {
         const foto = b.foto ? salvarFoto(base.id, b.foto) : base.foto || null
         const e = { ...base, nome, especialidade, especialidades: b.especialidades !== undefined ? limparLista(b.especialidades) : base.especialidades || [], bio, traducoes: b.traducoes !== undefined ? limparTraducoes(b.traducoes) : base.traducoes || {}, foto, ativo: b.ativo !== false, ordem: Number(b.ordem) || 0 }
         especialistas.salvar(e)
+        tradutor.adiantar(textosDaEspecialista(e), IDIOMAS_DO_CADASTRO)
         return json(res, 200, { ok: true, id: e.id })
       }
     }
@@ -743,6 +768,8 @@ createServer(async (req, res) => {
   console.log(`Céu Natal em http://127.0.0.1:${PORT} · cobranças ${KEY ? (SIMULADO ? 'de teste (ht_test_)' : 'REAIS') : 'simuladas (sem chave)'}`)
   if (KEY) conferirChave()
   console.log(`Meta: pixel ${pixelId() || '(sem META_PIXEL_ID)'} · CAPI ${capiLigada ? 'ligada' : 'desligada (falta META_CAPI_TOKEN)'}${process.env.META_TEST_CODE ? ' · MODO TESTE ' + process.env.META_TEST_CODE : ''}`)
+  tradutor.adiantar(especialistasAprovadas().flatMap(textosDaEspecialista), IDIOMAS_DO_CADASTRO)
+  tradutor.adiantar([...avaliacoes.mapa.values()].filter((a) => a.status === 'aprovada').map((a) => a.texto))
 })
 
 // Confere a chave na HotTrack ao ligar: nome, escopos e se falta algum que o site usa
