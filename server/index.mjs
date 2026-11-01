@@ -1,7 +1,7 @@
 // Servidor do Céu Natal: entrega o site (dist/), cria cobranças na HotTrack,
 // confere o pagamento e grava cada passo do funil. Node 22, sem dependências.
 //
-// Variáveis: HOTTRACK_API_KEY (ht_live_ ou ht_test_; sem ela as cobranças são simuladas),
+// Variáveis: DESLIGAR_METODOS (ex.: whop), HOTTRACK_API_KEY (ht_live_ ou ht_test_; sem ela as cobranças são simuladas),
 // PAINEL_TOKEN (senha do /painel), PORT (padrão 8787), DATA_DIR (padrão ./data).
 import { createServer } from 'node:http'
 import { createReadStream, existsSync, mkdirSync, readFileSync, appendFileSync, statSync } from 'node:fs'
@@ -220,7 +220,10 @@ const chaveMetodo = (wallet, currency) => `${wallet}:${currency}`
 function tirarDoAr(wallet, currency, minutos) {
   foraDoAr.set(chaveMetodo(wallet, currency), Date.now() + minutos * 60e3)
 }
+// DESLIGAR_METODOS=whop,transfcl desliga métodos de propósito (ex.: gateway desconectado)
+const DESLIGADOS = new Set(String(process.env.DESLIGAR_METODOS || '').split(',').map((x) => x.trim()).filter(Boolean))
 function estaForaDoAr(wallet, currency) {
+  if (DESLIGADOS.has(wallet)) return true
   const ate = foraDoAr.get(chaveMetodo(wallet, currency))
   return !!ate && ate > Date.now()
 }
