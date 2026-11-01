@@ -86,12 +86,14 @@ export function jornadas(dir, pedidos, { de, ate } = {}) {
   }
 
   const agora = Date.now()
+  // Aparelhos de teste da equipe (sid começando com 'teste') ficam fora
   return [...por.values()]
+    .filter((x) => !x.sid.startsWith('teste'))
     .map((x) => {
       const c = contatos.get(x.sid) || {}
       const mapa = x.pedidos.filter((p) => (p.product || 'mapa') === 'mapa')
       const pago = x.pedidos.filter((p) => p.status === 'paid')
-      const aberto = mapa.find((p) => p.status === 'pending')
+      const aberto = mapa.find((p) => p.status === 'pending') || x.pedidos.find((p) => p.status === 'pending')
       if (mapa.some((p) => p.status === 'paid')) x.etapa = 'pagou'
       else if (aberto && ORDEM[x.etapa] < ORDEM.codigo) x.etapa = 'codigo'
       return {
