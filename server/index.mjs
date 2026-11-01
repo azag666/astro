@@ -54,6 +54,54 @@ function salvarPergunta(q) {
   gravar('perguntas.jsonl', q)
 }
 
+// Tabelas só de acréscimos (a última linha de cada id vale): avaliações e especialistas
+function carregar(nome) {
+  const mapa = new Map()
+  const arq = join(DATA, nome)
+  if (existsSync(arq)) {
+    for (const linha of readFileSync(arq, 'utf8').split('\n')) {
+      if (!linha) continue
+      try {
+        const x = JSON.parse(linha)
+        mapa.set(x.id, x)
+      } catch {}
+    }
+  }
+  return {
+    mapa,
+    salvar(x) {
+      mapa.set(x.id, x)
+      gravar(nome, x)
+    },
+  }
+}
+const avaliacoes = carregar('avaliacoes.jsonl')
+const especialistas = carregar('especialistas.jsonl')
+const novoId = () => randomUUID().replace(/-/g, '').slice(0, 12)
+
+function notaDe(proId) {
+  const lista = [...avaliacoes.mapa.values()].filter((a) => a.status === 'aprovada' && a.pro === proId)
+  if (!lista.length) return { nota: null, avaliacoes: 0 }
+  return { nota: Math.round((lista.reduce((s, a) => s + a.nota, 0) / lista.length) * 10) / 10, avaliacoes: lista.length }
+}
+
+function especialistasPublicos() {
+  return [...especialistas.mapa.values()]
+    .filter((e) => e.ativo !== false && !e.removido)
+    .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || a.criadoEm.localeCompare(b.criadoEm))
+    .map((e) => ({ id: e.id, nome: e.nome, especialidade: e.especialidade, bio: e.bio, ...notaDe(e.id) }))
+}
+
+const porIpAvaliacao = new Map()
+function podeAvaliar(ipAddr) {
+  const agora = Date.now()
+  const lista = (porIpAvaliacao.get(ipAddr) || []).filter((t) => agora - t < 3600e3)
+  if (lista.length >= 5) return false
+  lista.push(agora)
+  porIpAvaliacao.set(ipAddr, lista)
+  return true
+}
+
 function salvarPedido(p) {
   p.updatedAt = new Date().toISOString()
   pedidos.set(p.id, p)
@@ -327,7 +375,7 @@ function lerCorpo(req, limite = 16 * 1024) {
   })
 }
 
-const EVENTOS = new Set(['view', 'quiz_start', 'quiz_step', 'signup', 'login', 'report_view', 'offer_view', 'buy_click', 'checkout_view', 'method_select', 'bump_toggle', 'pay_click', 'code_copy', 'redirect_open', 'paid_view', 'back_offer_view', 'back_offer_accept', 'upsell_accept', 'upsell_decline', 'pro_open', 'pack_select'])
+const EVENTOS = new Set(['view', 'quiz_start', 'quiz_step', 'signup', 'login', 'report_view', 'offer_view', 'buy_click', 'checkout_view', 'method_select', 'bump_toggle', 'pay_click', 'code_copy', 'redirect_open', 'paid_view', 'back_offer_view', 'back_offer_accept', 'upsell_accept', 'upsell_decline', 'pro_open', 'pack_select', 'review_open'])
 
 createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x')
@@ -423,12 +471,74 @@ createServer(async (req, res) => {
       return json(res, 200, { ok: true })
     }
 
+    if (url.pathname === '/api/especialistas' && req.method === 'GET') {
+      return json(res, 200, { especialistas: especialistasPublicos() })
+    }
+
+    if (url.pathname === '/api/avaliacoes' && req.method === 'GET') {
+      const pro = url.searchParams.get('pro')
+      const lista = [...avaliacoes.mapa.values()]
+        .filter((a) => a.status === 'aprovada' && (pro === null ? true : pro === '' ? !a.pro : a.pro === pro))
+        .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))
+        .slice(0, 100)
+        .map(({ id, nome, nota, texto, pro: p, pais, verificada, criadoEm }) => ({ id, nome, nota, texto, pro: p, pais, verificada, criadoEm }))
+      return json(res, 200, { avaliacoes: lista })
+    }
+
+    if (url.pathname === '/api/avaliacoes' && req.method === 'POST') {
+      const b = await lerCorpo(req)
+      const nome = String(b.nome || '').trim().slice(0, 60)
+      const texto = String(b.texto || '').trim().slice(0, 1000)
+      const nota = Math.round(Number(b.nota))
+      const pro = b.pro ? String(b.pro).slice(0, 30) : ''
+      if (nome.length < 2 || texto.length < 3 || !(nota >= 1 && nota <= 5)) return json(res, 400, { error: 'invalid' })
+      if (pro && !especialistas.mapa.has(pro)) return json(res, 400, { error: 'invalid_pro' })
+      if (!podeAvaliar(ip(req))) return json(res, 429, { error: 'rate_limited' })
+      const sidA = String(b.sid || '').slice(0, 64)
+      const comprou = !!sidA && [...pedidos.values()].some((p) => p.sid === sidA && p.status === 'paid')
+      avaliacoes.salvar({ id: novoId(), nome, nota, texto, pro, sid: sidA, pais: COUNTRIES[b.country] ? b.country : '', verificada: comprou, status: 'pendente', criadoEm: new Date().toISOString() })
+      gravar(`eventos-${hoje()}.jsonl`, { t: Date.now(), sid: sidA, ev: 'review_sent', country: COUNTRIES[b.country] ? b.country : '', props: { nota, pro } })
+      return json(res, 200, { ok: true })
+    }
+
+    if (url.pathname.startsWith('/api/painel/') && req.method === 'POST') {
+      if (!PAINEL_TOKEN || url.searchParams.get('k') !== PAINEL_TOKEN) return json(res, 404, { error: 'not_found' })
+      const b = await lerCorpo(req, 64 * 1024)
+      if (url.pathname === '/api/painel/avaliacao') {
+        const a = avaliacoes.mapa.get(String(b.id || ''))
+        if (!a || !['aprovada', 'recusada', 'pendente'].includes(b.status)) return json(res, 400, { error: 'invalid' })
+        avaliacoes.salvar({ ...a, status: b.status, moderadaEm: new Date().toISOString() })
+        return json(res, 200, { ok: true })
+      }
+      if (url.pathname === '/api/painel/especialista') {
+        const atual = b.id ? especialistas.mapa.get(String(b.id)) : null
+        if (b.remover && atual) {
+          especialistas.salvar({ ...atual, removido: true })
+          return json(res, 200, { ok: true })
+        }
+        const nome = String(b.nome || '').trim().slice(0, 60)
+        const especialidade = String(b.especialidade || '').trim().slice(0, 80)
+        const bio = String(b.bio || '').trim().slice(0, 600)
+        if (nome.length < 2 || especialidade.length < 2) return json(res, 400, { error: 'invalid' })
+        const e = { ...(atual || { id: novoId(), criadoEm: new Date().toISOString() }), nome, especialidade, bio, ativo: b.ativo !== false, ordem: Number(b.ordem) || 0 }
+        especialistas.salvar(e)
+        return json(res, 200, { ok: true, id: e.id })
+      }
+    }
+
     if (url.pathname === '/painel' || url.pathname === '/api/painel') {
       if (!PAINEL_TOKEN || url.searchParams.get('k') !== PAINEL_TOKEN) return json(res, 404, { error: 'not_found' })
       const resumo = resumoDoFunil(DATA, pedidos, { de: url.searchParams.get('de'), ate: url.searchParams.get('ate'), country: url.searchParams.get('pais'), campaign: url.searchParams.get('campanha') })
       if (url.pathname === '/api/painel') return json(res, 200, resumo)
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' })
-      res.end(painelHtml(resumo, url.searchParams, [...perguntas.values()].sort((a, b) => (a.status === b.status ? a.createdAt.localeCompare(b.createdAt) : a.status === 'aguardando' ? -1 : 1))))
+      res.end(
+        painelHtml(
+          resumo,
+          url.searchParams,
+          [...perguntas.values()].sort((a, b) => (a.status === b.status ? a.createdAt.localeCompare(b.createdAt) : a.status === 'aguardando' ? -1 : 1)),
+          { avaliacoes: [...avaliacoes.mapa.values()], especialistas: especialistasPublicos() },
+        ),
+      )
       return
     }
 

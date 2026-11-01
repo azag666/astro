@@ -10,6 +10,7 @@ import Success from './components/Success'
 import Volta from './components/Volta'
 import PosCompra from './components/PosCompra'
 import ProsArea from './components/pros/ProsArea'
+import AvaliacoesPage from './components/AvaliacoesPage'
 import Login from './components/Login'
 import { addOrder, currentAccount, login as loginAccount, logout, saveAccount } from './lib/account'
 import { COUNTRIES, detectCountry, I18nProvider } from './i18n'
@@ -35,7 +36,7 @@ const EMPTY = {
   consent: false,
 }
 
-const SCREENS = ['intro', 'login', 'quiz', 'analyzing', 'offer', 'checkout', 'success', 'volta', 'pros']
+const SCREENS = ['intro', 'login', 'quiz', 'analyzing', 'offer', 'checkout', 'success', 'volta', 'pros', 'avaliacoes']
 
 // Campanhas: ?f=amor|dinheiro|carreira|espiritual já define a dor do lead
 const FOCUSES = ['amor', 'dinheiro', 'carreira', 'espiritual']
@@ -192,6 +193,7 @@ export default function App() {
             />
           )}
           {screen === 'pros' && <ProsArea data={data} profiles={account?.profiles || []} />}
+          {screen === 'avaliacoes' && <AvaliacoesPage onBack={() => window.history.back()} />}
         </motion.main>
       </AnimatePresence>
     </I18nProvider>

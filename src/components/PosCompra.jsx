@@ -3,7 +3,9 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useI18n } from '../i18n'
 import { track } from '../lib/track'
 import QuickPay from './pros/QuickPay'
-import { AskForm, PROS, ProAvatar } from './pros/ProsArea'
+import { AskForm, ProAvatar } from './pros/ProsArea'
+import { useEspecialistas } from '../lib/pros'
+import ReviewForm from './ReviewForm'
 
 // Pós-compra do mapa: upsell (3 perguntas com desconto) → se recusar, downsell (1 pergunta) →
 // depois de pagar, já abre o formulário das perguntas. Ao final (ou recusando tudo) mostra `children`.
@@ -12,8 +14,9 @@ export default function PosCompra({ data, profiles = [], children }) {
   const [step, setStep] = useState(() => (sessionStorage.getItem('ceu-natal-poscompra') === 'fim' ? 'done' : 'up'))
   const [paid, setPaid] = useState(null)
   const [paying, setPaying] = useState(false)
-  const pro = PROS[0]
-  const p = t('pros.list')[pro.id]
+  const pros = useEspecialistas()
+  const pro = pros[0]
+  const p = pro
   const first = (data.name || '').trim().split(/\s+/)[0]
 
   const finish = () => {
@@ -22,7 +25,16 @@ export default function PosCompra({ data, profiles = [], children }) {
     window.scrollTo({ top: 0 })
   }
 
-  if (step === 'done') return children
+  if (step === 'done') {
+    return (
+      <>
+        {children}
+        <div className="mx-auto max-w-md px-5 pb-16">
+          <ReviewForm />
+        </div>
+      </>
+    )
+  }
 
   const offer = step === 'up' ? { pack: 3, offer: 'up', price: c.askUp, from: c.ask[3] } : { pack: 1, offer: 'down', price: c.askDown, from: c.ask[1] }
 

@@ -94,13 +94,13 @@ export function resumoDoFunil(dir, pedidos, { de, ate, country, campaign } = {})
 
 const PROS = { helena: 'Helena (astróloga)', marina: 'Marina (taróloga)', sofia: 'Sofia (numeróloga)', luna: 'Luna (amor e relacionamentos)', clara: 'Clara (carreira e dinheiro)' }
 
-function blocoPerguntas(lista, k) {
+function blocoPerguntas(lista, k, nomes = {}) {
   if (!lista.length) return ''
   const abertas = lista.filter((q) => q.status === 'aguardando').length
   const itens = lista
     .slice(0, 200)
     .map(
-      (q) => `<div class="card pergunta"><div class="sub">${esc(q.createdAt.slice(0, 16).replace('T', ' '))} UTC · ${esc(q.country)} · ${esc(PROS[q.proId] || q.proId)} · ${esc(q.name)}${q.profile?.name ? ` · sobre ${esc(q.profile.name)} (${esc(q.profile.birthDate)} ${esc(q.profile.birthTime || '')} ${esc(q.profile.place?.name || '')})` : ''}</div>
+      (q) => `<div class="card pergunta"><div class="sub">${esc(q.createdAt.slice(0, 16).replace('T', ' '))} UTC · ${esc(q.country)} · ${esc(nomes[q.proId] || PROS[q.proId] || q.proId)} · ${esc(q.name)}${q.profile?.name ? ` · sobre ${esc(q.profile.name)} (${esc(q.profile.birthDate)} ${esc(q.profile.birthTime || '')} ${esc(q.profile.place?.name || '')})` : ''}</div>
 <p><b>${esc(q.question)}</b></p>
 <form method="post" onsubmit="event.preventDefault();fetch('/api/painel/responder?k=${k}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:'${esc(q.id)}',answer:this.a.value})}).then(r=>r.ok?location.reload():alert('erro'))">
 <textarea name="a" rows="4" style="width:100%;box-sizing:border-box" placeholder="Resposta">${esc(q.answer || '')}</textarea>
@@ -108,6 +108,38 @@ function blocoPerguntas(lista, k) {
     )
     .join('')
   return `<h2>Perguntas aos profissionais (${abertas} aguardando)</h2>${itens}`
+}
+
+const postar = (k, rota, corpo) => `fetch('/api/painel/${rota}?k=${k}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(${corpo})}).then(r=>r.ok?location.reload():r.json().then(e=>alert(e.error||'erro')))`
+
+function blocoAvaliacoes(lista, k, nomes) {
+  const ordem = { pendente: 0, aprovada: 1, recusada: 2 }
+  const itens = lista
+    .slice()
+    .sort((a, b) => ordem[a.status] - ordem[b.status] || b.criadoEm.localeCompare(a.criadoEm))
+    .slice(0, 300)
+    .map((a) => {
+      const tag = a.status === 'aprovada' ? '<span class="tag ok">aprovada</span>' : a.status === 'recusada' ? '<span class="tag no">recusada</span>' : '<span class="tag">pendente</span>'
+      const botoes = ['aprovada', 'recusada']
+        .filter((st) => st !== a.status)
+        .map((st) => `<button type="button" onclick="${esc(postar(k, 'avaliacao', `{id:'${a.id}',status:'${st}'}`))}">${st === 'aprovada' ? 'Aprovar' : 'Recusar'}</button>`)
+        .join('')
+      return `<div class="card pergunta"><div class="sub"><b>${esc(a.nome)}</b> · <span class="estrelas">${'★'.repeat(a.nota)}${'☆'.repeat(5 - a.nota)}</span> · ${a.pro ? esc(nomes[a.pro] || a.pro) : 'Céu Natal'} · ${esc(a.pais || '')} · ${esc(a.criadoEm.slice(0, 16).replace('T', ' '))} UTC ${tag}${a.verificada ? '<span class="tag v">comprou</span>' : ''}</div><p>${esc(a.texto)}</p><div class="linha">${botoes}</div></div>`
+    })
+    .join('')
+  return `<h2>Avaliações</h2><p class="sub">Qualquer pessoa avalia pelo site (#/avaliacoes ou na página da especialista). Só as aprovadas aparecem. "comprou" = o aparelho tem compra paga.</p>${itens || '<p class="sub">Nenhuma avaliação ainda.</p>'}`
+}
+
+function blocoEspecialistas(lista, k) {
+  const form = (e = {}) => `<form class="card grade" onsubmit="event.preventDefault();${esc(postar(k, 'especialista', `{id:this.id.value||undefined,nome:this.nome.value,especialidade:this.esp.value,bio:this.bio.value,ordem:this.ordem.value}`))}">
+<input type="hidden" name="id" value="${esc(e.id || '')}">
+<input class="l" name="nome" placeholder="Nome" value="${esc(e.nome || '')}" required>
+<input class="l" name="esp" placeholder="Especialidade (ex.: Astróloga, Taróloga, Amor e relacionamentos)" value="${esc(e.especialidade || '')}" required>
+<textarea name="bio" rows="3" placeholder="Bio curta (aparece para o cliente)">${esc(e.bio || '')}</textarea>
+<div class="linha"><input name="ordem" type="number" placeholder="Ordem" value="${esc(e.ordem ?? '')}" style="width:90px"><button>${e.id ? 'Salvar' : 'Cadastrar especialista'}</button>${e.id ? `<button type="button" onclick="${esc(`if(confirm('Remover ${e.nome}?'))` + postar(k, 'especialista', `{id:'${e.id}',remover:true}`))}">Remover</button>` : ''}</div>
+${e.id ? `<div class="sub">${e.nota ? `★ ${e.nota} · ${e.avaliacoes} avaliação(ões) aprovada(s)` : 'Sem avaliações aprovadas ainda'}</div>` : ''}
+</form>`
+  return `<h2>Especialistas</h2><p class="sub">Enquanto não houver nenhuma cadastrada, o site mostra as personas de exemplo. A nota vem só das avaliações aprovadas.</p>${form()}${lista.map((e) => `<div style="margin-top:10px">${form(e)}</div>`).join('')}`
 }
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
@@ -122,8 +154,10 @@ function tabelaFunil(titulo, grupos) {
   return `<h2>${esc(titulo)}</h2><div class="scroll"><table><tr><th></th>${cab}<th>Conversão</th></tr>${linhas || '<tr><td colspan="10">Sem dados</td></tr>'}</table></div>`
 }
 
-export function painelHtml(r, params, perguntas = []) {
+export function painelHtml(r, params, perguntas = [], extras = {}) {
   const k = esc(params.get('k') || '')
+  const aba = ['funil', 'perguntas', 'avaliacoes', 'especialistas'].includes(params.get('aba')) ? params.get('aba') : 'funil'
+  const nomes = Object.fromEntries((extras.especialistas || []).map((e) => [e.id, e.nome]))
   const maior = Math.max(1, r.funil.view || 0)
   const barras = PASSOS.map(([key, nome], i) => {
     const n = r.funil[key] || 0
@@ -153,10 +187,23 @@ th,td{padding:8px 10px;border-bottom:1px solid #f0f0f3;text-align:left;white-spa
 small{display:block;color:#86868b;font-size:11px}.scroll{overflow-x:auto}
 .kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}.kpi{background:#fff;border-radius:12px;padding:12px 16px;min-width:150px}.kpi b{display:block;font-size:20px}
 .pergunta{margin:10px 0}.pergunta p{margin:8px 0}textarea{font:inherit;padding:8px;border:1px solid #d2d2d7;border-radius:8px}
+.abas{display:flex;gap:6px;margin:10px 0 18px;flex-wrap:wrap}.abas a{padding:7px 12px;border-radius:999px;background:#fff;color:#1d1d1f;text-decoration:none;font-weight:500}.abas a.on{background:#1d1d1f;color:#fff}
+.estrelas{color:#e3a008;letter-spacing:1px}.tag{display:inline-block;padding:1px 8px;border-radius:999px;background:#f0f0f3;font-size:12px;margin-left:6px}.tag.ok{background:#d1fae5}.tag.no{background:#fee2e2}.tag.v{background:#e0e7ff}
+.linha{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.grade{display:grid;gap:8px}input.l{width:100%;box-sizing:border-box}
 @media(max-width:640px){.passo{grid-template-columns:1fr 50px 50px}.barra{display:none}}
 </style></head><body><main>
-<h1>Funil do Céu Natal</h1>
-<div class="sub">${esc(r.periodo.de)} a ${esc(r.periodo.ate)} · pessoas únicas por passo</div>
+<h1>Céu Natal</h1>
+<nav class="abas">${[['funil', 'Funil'], ['perguntas', `Perguntas (${perguntas.filter((q) => q.status === 'aguardando').length})`], ['avaliacoes', `Avaliações (${(extras.avaliacoes || []).filter((a) => a.status === 'pendente').length})`], ['especialistas', 'Especialistas']]
+    .map(([id, nome]) => `<a href="?k=${k}&aba=${id}" class="${aba === id ? 'on' : ''}">${esc(nome)}</a>`)
+    .join('')}</nav>
+${aba === 'perguntas' ? blocoPerguntas(perguntas, k, nomes) || '<p class="sub">Nenhuma pergunta ainda.</p>' : ''}
+${aba === 'avaliacoes' ? blocoAvaliacoes(extras.avaliacoes || [], k, nomes) : ''}
+${aba === 'especialistas' ? blocoEspecialistas(extras.especialistas || [], k) : ''}
+${aba === 'funil' ? funilHtml() : ''}
+</main></body></html>`
+
+  function funilHtml() {
+    return `<div class="sub">${esc(r.periodo.de)} a ${esc(r.periodo.ate)} · pessoas únicas por passo</div>
 <form><input type="hidden" name="k" value="${k}">
 <input type="date" name="de" value="${esc(params.get('de') || r.periodo.de)}"><input type="date" name="ate" value="${esc(params.get('ate') || r.periodo.ate)}">
 <select name="pais"><option value="">Todos os países</option>${['br', 'mx', 'co', 'ar', 'cn'].map((p) => `<option ${params.get('pais') === p ? 'selected' : ''}>${p}</option>`).join('')}</select>
@@ -172,7 +219,6 @@ ${tabelaFunil('Por campanha (utm_campaign)', r.porCampanha)}
       .map(([nome, v]) => `<tr><td>${esc(nome)}</td><td>${v.pessoas ?? ''}</td><td>${v.cobrancas ?? ''}</td><td>${v.pagas ?? ''}</td></tr>`)
       .join('') || '<tr><td colspan="4">Sem dados</td></tr>'
   }</table>
-${blocoPerguntas(perguntas, k)}
-${erros ? `<h2>Falhas ao gerar cobrança</h2><table><tr><th>País/método: erro</th><th>Vezes</th></tr>${erros}</table>` : ''}
-</main></body></html>`
+${erros ? `<h2>Falhas ao gerar cobrança</h2><table><tr><th>País/método: erro</th><th>Vezes</th></tr>${erros}</table>` : ''}`
+  }
 }

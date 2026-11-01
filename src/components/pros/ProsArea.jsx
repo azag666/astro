@@ -6,16 +6,11 @@ import { PACKS } from '../../i18n/paises.js'
 import { sid, track } from '../../lib/track'
 import QuickPay from './QuickPay'
 import Reviews from '../Reviews'
-import { detalhesDoPro } from '../../data/avaliacoes'
+import ReviewForm from '../ReviewForm'
+import { useEspecialistas } from '../../lib/pros'
 
-// Especialistas (personas). A resposta é escrita pela equipe no /painel, assinada pela especialista escolhida.
-export const PROS = [
-  { id: 'helena', glyph: '☉', from: '#f5c76b', to: '#b8742a' },
-  { id: 'luna', glyph: '♀', from: '#f59ab8', to: '#a33a6b' },
-  { id: 'marina', glyph: '✦', from: '#a78bfa', to: '#5b3fc4' },
-  { id: 'clara', glyph: '♃', from: '#6ee7b7', to: '#1f7a5a' },
-  { id: 'sofia', glyph: '9', from: '#7dd3fc', to: '#1d5f9c' },
-]
+// Especialistas vêm de useEspecialistas (cadastradas no painel ou personas de exemplo).
+// A resposta é escrita pela equipe no /painel, assinada pela especialista escolhida.
 
 export function ProAvatar({ pro, size = 'h-14 w-14 text-2xl' }) {
   return (
@@ -25,16 +20,16 @@ export function ProAvatar({ pro, size = 'h-14 w-14 text-2xl' }) {
   )
 }
 
-// Nota, nº de avaliações e anos de prática (src/data/avaliacoes.js): reais, ou só na maquete com selo
-export function ProStats({ id }) {
+// Nota e nº de avaliações (aprovadas no painel); na maquete, com selo de exemplo
+export function ProStats({ pro }) {
   const { t, c } = useI18n()
-  const d = detalhesDoPro(id)
+  const d = pro.stats
   if (!d) return null
   return (
     <span className="flex flex-wrap items-center gap-x-2 text-xs font-normal text-white/60">
       <span className="flex items-center gap-1"><StarIcon className="h-3.5 w-3.5 text-gold-400" /> {d.nota.toLocaleString(c.locale)}</span>
-      <span>· {t('pros.reviews', { n: d.avaliacoes.toLocaleString(c.locale) })}</span>
-      <span>· {t('pros.years', { n: d.anos })}</span>
+      <span>· {d.avaliacoes === 1 ? t('pros.review1') : t('pros.reviews', { n: d.avaliacoes.toLocaleString(c.locale) })}</span>
+      {d.anos && <span>· {t('pros.years', { n: d.anos })}</span>}
       {d.exemplo && <span className="rounded-full bg-rose-500/80 px-1.5 text-[10px] font-bold uppercase text-white">exemplo</span>}
     </span>
   )
@@ -51,7 +46,7 @@ export default function ProsArea({ data, profiles = [], initialPro = null }) {
   const { t, money, c } = useI18n()
   const [view, setView] = useState(initialPro ? { name: 'packs', pro: initialPro } : { name: 'list' })
   const [mine, setMine] = useState({ perguntas: [], creditos: [] })
-  const info = t('pros.list')
+  const pros = useEspecialistas()
 
   const load = useCallback(() => {
     fetch(`/api/perguntas?sid=${sid}`)
@@ -68,8 +63,8 @@ export default function ProsArea({ data, profiles = [], initialPro = null }) {
     window.scrollTo({ top: 0 })
   }
 
-  const pro = PROS.find((p) => p.id === view.pro)
-  const p = pro && info[pro.id]
+  const pro = pros.find((x) => x.id === view.pro)
+  const p = pro
 
   return (
     <div className="mx-auto max-w-xl px-5 py-8">
@@ -79,18 +74,18 @@ export default function ProsArea({ data, profiles = [], initialPro = null }) {
             <h2 className="font-serif text-3xl font-semibold">{t('pros.title')}</h2>
             <p className="mt-2 text-white/60">{t('pros.sub')}</p>
             <div className="mt-6 space-y-3">
-              {PROS.map((x) => {
-                const i = info[x.id]
+              {pros.map((x) => {
+                const i = x
                 return (
                   <button key={x.id} type="button" onClick={() => openPro(x.id)} className="glass flex w-full gap-4 rounded-3xl p-4 text-left transition hover:bg-white/[0.07]">
                     <ProAvatar pro={x} />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5 font-semibold">{i.name}</span>
                       <span className="block text-sm text-gold-300/90">{i.role}</span>
-                      <ProStats id={x.id} />
+                      <ProStats pro={x} />
                       <span className="mt-1 block text-sm text-white/55">{i.bio}</span>
                       <span className="mt-2 flex flex-wrap gap-1.5">
-                        {i.tags.map((tag) => (
+                        {(i.tags || []).map((tag) => (
                           <span key={tag} className="rounded-full bg-white/[0.06] px-2.5 py-0.5 text-xs text-white/60">{tag}</span>
                         ))}
                       </span>
@@ -99,7 +94,7 @@ export default function ProsArea({ data, profiles = [], initialPro = null }) {
                 )
               })}
             </div>
-            <MyQuestions mine={mine} info={info} />
+            <MyQuestions mine={mine} pros={pros} />
           </motion.div>
         )}
 
@@ -129,7 +124,8 @@ export default function ProsArea({ data, profiles = [], initialPro = null }) {
                 </button>
               ))}
             </div>
-            <Reviews pro={pro.id} produto="perguntas" title={t('pros.reviewsTitle', { name: p.name })} />
+            <Reviews pro={pro.id} title={t('pros.reviewsTitle', { name: p.name })} />
+            {pro.real && <ReviewForm pro={pro} />}
           </motion.div>
         )}
 
@@ -166,6 +162,8 @@ export default function ProsArea({ data, profiles = [], initialPro = null }) {
                 setView({ name: 'list' })
               }}
             />
+            <Reviews pro={pro.id} title={t('pros.reviewsTitle', { name: p.name })} />
+            {pro.real && <ReviewForm pro={pro} />}
           </motion.div>
         )}
       </AnimatePresence>
@@ -189,7 +187,7 @@ function ProHeader({ pro, p }) {
       <div>
         <p className="font-serif text-2xl font-semibold">{p.name}</p>
         <p className="text-sm text-gold-300/90">{p.role}</p>
-        <ProStats id={pro.id} />
+        <ProStats pro={pro} />
         <p className="mt-0.5 flex items-center gap-3 text-xs text-white/55">
           <span className="flex items-center gap-1"><ClockIcon className="h-3.5 w-3.5" /> {t('pros.answerIn')}</span>
         </p>
@@ -269,7 +267,7 @@ export function AskForm({ pro, p, orderId, left, profiles = [], onSent }) {
   )
 }
 
-function MyQuestions({ mine, info }) {
+function MyQuestions({ mine, pros }) {
   const { t } = useI18n()
   if (!mine.perguntas.length) return null
   return (
@@ -282,7 +280,7 @@ function MyQuestions({ mine, info }) {
           .map((q) => (
             <div key={q.id} className="glass rounded-2xl p-4">
               <p className="text-xs text-white/45">
-                {info[q.proId]?.name} · {q.status === 'respondida' ? t('pros.answered') : t('pros.waiting')}
+                {pros.find((x) => x.id === q.proId)?.name} · {q.status === 'respondida' ? t('pros.answered') : t('pros.waiting')}
                 {q.profileName ? ` · ${q.profileName}` : ''}
               </p>
               <p className="mt-1 font-medium">{q.question}</p>
