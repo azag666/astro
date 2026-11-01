@@ -56,7 +56,10 @@ export default function App() {
   const [country, setCountry] = useState(detectCountry)
   const [data, setData] = useState(() => {
     try {
-      const saved = { ...EMPTY, ...JSON.parse(sessionStorage.getItem('ceu-natal') || '{}') }
+      const daSessao = JSON.parse(sessionStorage.getItem('ceu-natal') || '{}')
+      // Aba nova ou volta depois: os dados do quiz ficam na conta salva no aparelho
+      const daConta = currentAccount()?.data || {}
+      const saved = { ...EMPTY, ...daConta, ...Object.fromEntries(Object.entries(daSessao).filter(([, v]) => v !== '' && v != null)) }
       return URL_FOCUS ? { ...saved, focus: URL_FOCUS } : saved
     } catch {
       return EMPTY

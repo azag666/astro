@@ -57,3 +57,16 @@ export function useEspecialistas() {
   const info = t('pros.list')
   return PERSONAS.map((p) => ({ ...p, ...info[p.id], stats: detalhesDoPro(p.id), real: false }))
 }
+
+// Especialista que combina com a dor do quiz (amor, dinheiro, carreira, espiritual); sem par, a primeira
+const PALAVRAS = {
+  amor: ['amor', 'relac', 'sinastr', 'taró', 'tarot', 'tarô'],
+  dinheiro: ['dinheiro', 'dinero', 'carreira', 'trabajo', 'numer'],
+  carreira: ['carreira', 'trabajo', 'dinheiro', 'dinero', 'numer'],
+  espiritual: ['astró', 'astro', 'espirit', 'holíst', 'holist'],
+}
+export function especialistaDaDor(pros, focus) {
+  const chaves = PALAVRAS[focus] || []
+  const texto = (p) => [p.role, ...(p.tags || [])].join(' ').toLowerCase()
+  return pros.find((p) => chaves.some((k) => texto(p).includes(k))) || pros[0] || null
+}

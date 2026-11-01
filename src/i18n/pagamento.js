@@ -5,6 +5,7 @@ export default {
       footnote: 'Garantia de 7 dias · Pagamento seguro · Dados protegidos',
       pay: {
         edit: 'Alterar',
+        confirmTitle: 'Confira seus dados',
         unavailable: 'Essa forma de pagamento está fora do ar agora. Já trocamos para outra: é só tocar em pagar de novo.',
         error: 'Não conseguimos gerar o pagamento. Tente de novo em alguns segundos.',
         tooMany: 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.',
@@ -35,6 +36,7 @@ export default {
       footnote: 'Garantía de 7 días · Pago seguro · Datos protegidos',
       pay: {
         edit: 'Cambiar',
+        confirmTitle: 'Confirma tus datos',
         unavailable: 'Este medio de pago no está disponible ahora. Ya cambiamos a otro: solo toca pagar de nuevo.',
         error: 'No pudimos generar el pago. Inténtalo de nuevo en unos segundos.',
         tooMany: 'Demasiados intentos seguidos. Espera unos minutos e inténtalo otra vez.',
@@ -81,6 +83,7 @@ export default {
     checkout: {
       pay: {
         edit: '修改',
+        confirmTitle: '确认你的信息',
         unavailable: '该支付方式暂不可用，已为你切换，请再次点击支付。',
         error: '暂时无法生成付款，请稍后再试。',
         tooMany: '尝试次数过多，请几分钟后再试。',

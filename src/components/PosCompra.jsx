@@ -3,8 +3,9 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useI18n } from '../i18n'
 import { track } from '../lib/track'
 import QuickPay from './pros/QuickPay'
-import { AskForm, ProAvatar } from './pros/ProsArea'
-import { useEspecialistas } from '../lib/pros'
+import { AskForm } from './pros/ProsArea'
+import ProAvatar from './pros/ProAvatar'
+import { especialistaDaDor, useEspecialistas } from '../lib/pros'
 import ReviewForm from './ReviewForm'
 
 // Pós-compra do mapa: upsell (3 perguntas com desconto) → se recusar, downsell (1 pergunta) →
@@ -16,7 +17,7 @@ export default function PosCompra({ data, order = null, profiles = [], children 
   const [paid, setPaid] = useState(() => (order?.askBump && order.orderId && sessionStorage.getItem('ceu-natal-poscompra') !== 'fim' ? { id: order.orderId, pack: 1 } : null))
   const [paying, setPaying] = useState(false)
   const pros = useEspecialistas()
-  const pro = pros[0]
+  const pro = especialistaDaDor(pros, data.focus)
   const p = pro
   const first = (data.name || '').trim().split(/\s+/)[0]
 

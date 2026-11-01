@@ -4,6 +4,8 @@ export default {
     askBump: {
       yes: 'Sim, quero perguntar',
       title: '1 pergunta para uma especialista',
+      titlePro: 'Pergunte à {name}: 1 resposta escrita',
+      textPro: 'Depois do pagamento você escreve sua pergunta, e {name} responde por escrito, olhando o seu mapa, em até 24 h.',
       text: 'Depois do pagamento, você escreve sua pergunta e uma especialista responde por escrito, usando o seu mapa, em até 24 h.',
     },
     checkout: { lineAskBump: 'Pergunta à especialista' },
@@ -110,6 +112,8 @@ export default {
     askBump: {
       yes: 'Sí, quiero preguntar',
       title: '1 pregunta a una especialista',
+      titlePro: 'Pregúntale a {name}: 1 respuesta escrita',
+      textPro: 'Después del pago escribes tu pregunta, y {name} te responde por escrito, mirando tu carta, en menos de 24 h.',
       text: 'Después del pago escribes tu pregunta y una especialista responde por escrito, usando tu carta, en menos de 24 h.',
     },
     checkout: { lineAskBump: 'Pregunta a la especialista' },
@@ -232,6 +236,8 @@ export default {
     askBump: {
       yes: '是的，我要提问',
       title: '向专家提 1 个问题',
+      titlePro: '向 {name} 提 1 个问题',
+      textPro: '付款后写下你的问题，{name} 会根据你的星盘在 24 小时内书面回复。',
       text: '付款后写下你的问题，专家会根据你的星盘在 24 小时内书面回复。',
     },
     checkout: { lineAskBump: '专家提问' },

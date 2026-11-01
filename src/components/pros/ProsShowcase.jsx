@@ -2,7 +2,8 @@ import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline'
 import { useI18n } from '../../i18n'
 import { useEspecialistas } from '../../lib/pros'
 import { track } from '../../lib/track'
-import { ProAvatar, ProStats } from './ProsArea'
+import { ProStats } from './ProsArea'
+import ProAvatar from './ProAvatar'
 
 // Vitrine das especialistas na página de oferta: tocar abre a área de perguntas já com ela escolhida
 export default function ProsShowcase() {

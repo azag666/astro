@@ -27,6 +27,8 @@ import { htMethod } from '../i18n/paises.js'
 import { sid, track, utm } from '../lib/track'
 import QRCode from 'qrcode'
 import { DateSelect, TimeSelect } from './DateSelect'
+import ProAvatar from './pros/ProAvatar'
+import { especialistaDaDor, useEspecialistas } from '../lib/pros'
 
 const ORDER_KEY = 'ceu-natal-pedido'
 
@@ -60,6 +62,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
   const [bump, setBump] = useState(false)
   const [numBump, setNumBump] = useState(false)
   const [askBump, setAskBump] = useState(false)
+  const pro = especialistaDaDor(useEspecialistas(), data.focus)
   const [touched, setTouched] = useState(false)
   const [order, setOrder] = useState(() => savedOrder(country))
   const [stage, setStage] = useState(() => (order ? 'pending' : 'form'))
@@ -80,6 +83,8 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
   const phoneDigits = data.phone.replace(/\D/g, '')
   const contactOk = data.name.trim().length >= 2 && isEmail(data.email) && phoneDigits.length >= c.phone.min
   const showContact = !contactOk || editContact
+  // Tudo já veio do quiz/conta: o checkout só pede para confirmar e escolher como pagar
+  const soConfirmar = !showContact && fromQuiz
 
   const errors = useMemo(() => {
     const e = {}
@@ -225,6 +230,23 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
             noValidate
           >
             <div className="order-2 space-y-6 lg:order-1">
+              {soConfirmar && (
+                <Card step="1" title={t('checkout.pay.confirmTitle')}>
+                  <div className="space-y-2 rounded-xl bg-white/[0.04] px-4 py-3.5 text-sm">
+                    <p className="flex items-center gap-2"><UserIcon className="h-4 w-4 shrink-0 text-gold-400" />{buyFor ? buyFor.name : data.name}</p>
+                    <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                      <span className="flex items-center gap-2"><CalendarDaysIcon className="h-4 w-4 text-gold-400" />{new Date(subject.birthDate + 'T12:00').toLocaleDateString(c.locale)}</span>
+                      <span className="flex items-center gap-2"><ClockIcon className="h-4 w-4 text-gold-400" />{subject.unknownTime || !subject.birthTime ? t('checkout.unknownTime') : subject.birthTime}</span>
+                      <span className="flex items-center gap-2"><MapPinIcon className="h-4 w-4 text-gold-400" />{subject.place.name}</span>
+                    </p>
+                    <p className="flex items-center gap-2 text-white/60"><EnvelopeIcon className="h-4 w-4 shrink-0 text-gold-400" />{data.email}</p>
+                  </div>
+                  <button type="button" onClick={() => setEditContact(true)} className="mt-2 flex items-center gap-1 text-xs text-white/50 hover:text-white">
+                    <PencilSquareIcon className="h-4 w-4" /> {t('checkout.pay.edit')}
+                  </button>
+                </Card>
+              )}
+              {!soConfirmar && (
               <Card step="1" title={t('checkout.step1')}>
                 {!showContact ? (
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl bg-white/[0.04] px-4 py-3.5 text-sm">
@@ -263,6 +285,9 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
                 )}
               </Card>
 
+              )}
+
+              {!soConfirmar && (
               <Card step="2" title={t('checkout.step2')}>
                 {fromQuiz ? (
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl bg-white/[0.04] px-4 py-3.5 text-sm">
@@ -286,7 +311,9 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
                 )}
               </Card>
 
-              <Card step="3" title={t('checkout.step3')}>
+              )}
+
+              <Card step={soConfirmar ? '2' : '3'} title={t('checkout.step3')}>
                 <div className={`grid gap-3 ${wallets.length === 1 ? 'grid-cols-1' : wallets.length > 3 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'}`}>
                   {wallets.map((w) => (
                     <WalletTab
@@ -364,6 +391,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
               {live && (
                 <Bump
                   k="askBump"
+                  pro={pro}
                   checked={askBump}
                   onChange={(v) => {
                     setAskBump(v)
@@ -499,7 +527,7 @@ export function WalletTab({ id, active, onClick, color, label, note }) {
       className={`relative flex items-center gap-3 rounded-2xl border p-4 text-left transition ${active ? 'border-gold-400 bg-gold-400/10' : 'border-white/10 hover:border-white/25'}`}
     >
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xs font-bold text-white" style={{ background: color }}>
-        {id === 'pix' ? <PixLogo /> : label.slice(0, 2)}
+        {id === 'pix' ? <PixLogo /> : id === 'whop' ? <CreditCardIcon className="h-5 w-5 text-night-950" /> : label.slice(0, 2)}
       </span>
       <span className="min-w-0">
         <span className="block truncate font-semibold">{label}</span>
@@ -510,7 +538,7 @@ export function WalletTab({ id, active, onClick, color, label, note }) {
   )
 }
 
-function Bump({ k = 'bump', checked, onChange }) {
+function Bump({ k = 'bump', pro = null, checked, onChange }) {
   const { t, money, c } = useI18n()
   const price = k === 'bump' ? c.bump : k === 'askBump' ? c.askDown : c.numBump
   const from = k === 'bump' ? c.bumpFrom : k === 'askBump' ? c.ask[1] : c.numBumpFrom
@@ -526,8 +554,18 @@ function Bump({ k = 'bump', checked, onChange }) {
         </span>
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-gold-300">{t(`${k}.yes`)}</p>
-          <p className="mt-1 font-semibold">{t(`${k}.title`)}</p>
-          <p className="mt-1 text-sm text-white/60">{t(`${k}.text`)}</p>
+          {k === 'askBump' && pro ? (
+            <p className="mt-2 flex items-center gap-3">
+              <ProAvatar pro={pro} size="h-11 w-11 text-lg" />
+              <span>
+                <span className="block font-semibold">{t('askBump.titlePro', { name: pro.name.split(' ')[0] })}</span>
+                <span className="text-xs text-gold-300/90">{pro.role}</span>
+              </span>
+            </p>
+          ) : (
+            <p className="mt-1 font-semibold">{t(`${k}.title`)}</p>
+          )}
+          <p className="mt-1 text-sm text-white/60">{k === 'askBump' && pro ? t('askBump.textPro', { name: pro.name.split(' ')[0] }) : t(`${k}.text`)}</p>
           <p className="mt-2 text-sm">
             <s className="text-white/40">{money(from)}</s>
             <span className="ml-2 font-semibold text-gold-300">+ {money(price)}</span>
