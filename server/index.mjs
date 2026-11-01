@@ -96,7 +96,7 @@ function especialistasPublicos() {
   return [...especialistas.mapa.values()]
     .filter(aprovada)
     .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || a.criadoEm.localeCompare(b.criadoEm))
-    .map((e) => ({ id: e.id, nome: e.nome, especialidade: e.especialidade, especialidades: e.especialidades || [], bio: e.bio, foto: e.foto || null, ...notaDe(e.id) }))
+    .map((e) => ({ id: e.id, nome: e.nome, especialidade: e.especialidade, especialidades: e.especialidades || [], bio: e.bio, traducoes: e.traducoes || {}, foto: e.foto || null, ...notaDe(e.id) }))
 }
 
 // Foto em data URL (jpeg/png/webp, até ~1,5 MB): grava em DATA/fotos e devolve o caminho público
@@ -110,6 +110,14 @@ function salvarFoto(id, dataUrl) {
   return `/fotos/${nome}`
 }
 
+// Versão em espanhol do cadastro; campo vazio cai no português
+const limparTraducoes = (v) =>
+  Object.fromEntries(
+    ['es'].map((l) => {
+      const x = (v && v[l]) || {}
+      return [l, { especialidade: String(x.especialidade || '').trim().slice(0, 80), especialidades: limparLista(x.especialidades), bio: String(x.bio || '').trim().slice(0, 600) }]
+    }),
+  )
 const limparLista = (v, max = 8) => (Array.isArray(v) ? v : String(v || '').split(',')).map((x) => String(x).trim().slice(0, 40)).filter(Boolean).slice(0, max)
 
 const porIpAvaliacao = new Map()
@@ -685,7 +693,7 @@ createServer(async (req, res) => {
         if (nome.length < 2 || especialidade.length < 2) return json(res, 400, { error: 'invalid' })
         const base = atual || { id: novoId(), criadoEm: new Date().toISOString(), status: 'aprovada', origem: 'painel' }
         const foto = b.foto ? salvarFoto(base.id, b.foto) : base.foto || null
-        const e = { ...base, nome, especialidade, especialidades: b.especialidades !== undefined ? limparLista(b.especialidades) : base.especialidades || [], bio, foto, ativo: b.ativo !== false, ordem: Number(b.ordem) || 0 }
+        const e = { ...base, nome, especialidade, especialidades: b.especialidades !== undefined ? limparLista(b.especialidades) : base.especialidades || [], bio, traducoes: b.traducoes !== undefined ? limparTraducoes(b.traducoes) : base.traducoes || {}, foto, ativo: b.ativo !== false, ordem: Number(b.ordem) || 0 }
         especialistas.salvar(e)
         return json(res, 200, { ok: true, id: e.id })
       }

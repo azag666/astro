@@ -30,7 +30,7 @@ export function recarregarEspecialistas() {
 }
 
 export function useEspecialistas() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const [lista, setLista] = useState(cache)
   useEffect(() => {
     let vivo = true
@@ -41,18 +41,24 @@ export function useEspecialistas() {
   }, [])
 
   if (lista && lista.length) {
-    return lista.map((e, i) => ({
-      id: e.id,
-      name: e.nome,
-      role: e.especialidade,
-      bio: e.bio,
-      tags: e.especialidades || [],
-      foto: e.foto || null,
-      glyph: e.nome.trim()[0]?.toUpperCase() || '✦',
-      ...CORES[i % CORES.length],
-      stats: e.avaliacoes ? { nota: e.nota, avaliacoes: e.avaliacoes, exemplo: false } : null,
-      real: true,
-    }))
+    return lista.map((e, i) => {
+      // Versão do idioma cadastrada no painel; o que faltar fica em português
+      const tr = (lang !== 'pt' && e.traducoes?.[lang]) || {}
+      return {
+        id: e.id,
+        name: e.nome,
+        role: tr.especialidade || e.especialidade,
+        bio: tr.bio || e.bio,
+        tags: tr.especialidades?.length ? tr.especialidades : e.especialidades || [],
+        // Para achar a especialista da dor pelas palavras em português
+        busca: [e.especialidade, ...(e.especialidades || [])].join(' '),
+        foto: e.foto || null,
+        glyph: e.nome.trim()[0]?.toUpperCase() || '✦',
+        ...CORES[i % CORES.length],
+        stats: e.avaliacoes ? { nota: e.nota, avaliacoes: e.avaliacoes, exemplo: false } : null,
+        real: true,
+      }
+    })
   }
   const info = t('pros.list')
   return PERSONAS.map((p) => ({ ...p, ...info[p.id], stats: detalhesDoPro(p.id), real: false }))
@@ -68,7 +74,7 @@ const PALAVRAS = {
 }
 export function especialistaDaDor(pros, focus) {
   const chaves = PALAVRAS[focus] || []
-  const texto = (p) => [p.role, ...(p.tags || [])].join(' ').toLowerCase()
+  const texto = (p) => [p.busca, p.role, ...(p.tags || [])].join(' ').toLowerCase()
   // A ordem das palavras é a prioridade: a 1ª palavra que bate com alguém escolhe a especialista
   for (const k of chaves) {
     const achou = pros.find((p) => texto(p).includes(k))

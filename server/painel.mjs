@@ -168,12 +168,13 @@ function lerFoto(input, cb) {
 }
 function salvarEsp(form) {
   lerFoto(form.foto, (foto) => {
-    fetch('/api/painel/especialista?k=${k}', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: form.id.value || undefined, nome: form.nome.value, especialidade: form.esp.value, especialidades: form.tags.value, bio: form.bio.value, ordem: form.ordem.value, foto }) })
+    fetch('/api/painel/especialista?k=${k}', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: form.id.value || undefined, nome: form.nome.value, especialidade: form.esp.value, especialidades: form.tags.value, bio: form.bio.value, traducoes: { es: { especialidade: form.esp_es.value, especialidades: form.tags_es.value, bio: form.bio_es.value } }, ordem: form.ordem.value, foto }) })
       .then((r) => (r.ok ? location.reload() : r.json().then((e) => alert(e.error || 'erro'))))
   })
 }
 </script>`
   const form = (e = {}) => {
+    const es = e.traducoes?.es || {}
     const tag = e.status === 'pendente' ? '<span class="tag">pendente</span>' : e.status === 'recusada' ? '<span class="tag no">recusada</span>' : e.id ? '<span class="tag ok">no ar</span>' : ''
     const status = e.id
       ? ['aprovada', 'recusada']
@@ -189,6 +190,11 @@ ${e.email || e.whatsapp ? `<div class="sub">Contato: ${esc(e.email || '')} ${esc
 <input class="l" name="esp" placeholder="Especialidade principal (ex.: Astróloga)" value="${esc(e.especialidade || '')}" required>
 <input class="l" name="tags" placeholder="Outras especialidades, separadas por vírgula (ex.: Tarô, Amor, Sinastria)" value="${esc((e.especialidades || []).join(', '))}">
 <textarea name="bio" rows="3" placeholder="Bio curta (aparece para o cliente)">${esc(e.bio || '')}</textarea>
+<details${es.bio || es.especialidade ? ' open' : ''}><summary class="sub">Em espanhol (México, Colômbia, Chile, Argentina). Vazio = mostra o português</summary>
+<input class="l" name="esp_es" placeholder="Especialidad principal (ej.: Astróloga)" value="${esc(es.especialidade || '')}">
+<input class="l" name="tags_es" placeholder="Otras especialidades, separadas por coma" value="${esc((es.especialidades || []).join(', '))}">
+<textarea name="bio_es" rows="3" placeholder="Bio corta en español">${esc(es.bio || '')}</textarea>
+</details>
 <label class="sub">Foto (quadrada, recortada sozinha): <input type="file" name="foto" accept="image/*"></label>
 <div class="linha"><input name="ordem" type="number" placeholder="Ordem" value="${esc(e.ordem ?? '')}" style="width:90px"><button>${e.id ? 'Salvar' : 'Cadastrar especialista'}</button>${status}${e.id ? `<button type="button" onclick="${esc(`if(confirm('Remover ${e.nome}?'))` + postar(k, 'especialista', `{id:'${e.id}',remover:true}`))}">Remover</button>` : ''}</div>
 ${e.id && e.status === 'aprovada' ? `<div class="sub">${e.nota ? `★ ${e.nota} · ${e.avaliacoes} avaliação(ões) aprovada(s)` : 'Sem avaliações aprovadas ainda'}</div>` : ''}
