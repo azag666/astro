@@ -386,6 +386,25 @@ function limparProps(props) {
   return out
 }
 
+// Robôs de revisão de anúncio da Meta (rede AS32934): não contam no funil nem vão para a CAPI
+const META_V4 = ['31.13.24.0/21', '31.13.64.0/18', '45.64.40.0/22', '57.141.0.0/16', '57.144.0.0/14', '66.220.144.0/20', '69.63.176.0/20', '69.171.224.0/19', '74.119.76.0/22', '102.132.96.0/20', '103.4.96.0/22', '129.134.0.0/16', '147.75.208.0/20', '157.240.0.0/16', '163.70.128.0/17', '173.252.64.0/18', '179.60.192.0/22', '185.60.216.0/22', '185.89.216.0/22', '199.201.64.0/22', '204.15.20.0/22']
+const ipNum = (a) => a.split('.').reduce((n, o) => n * 256 + Number(o), 0)
+const FAIXAS = META_V4.map((c) => {
+  const [base, bits] = c.split('/')
+  const tam = 2 ** (32 - Number(bits))
+  const ini = Math.floor(ipNum(base) / tam) * tam
+  return [ini, ini + tam]
+})
+function ehRoboMeta(req) {
+  const a = String(req.headers['cf-connecting-ip'] || '')
+  const ua = String(req.headers['user-agent'] || '')
+  if (/facebookexternalhit|facebookcatalog|meta-externalagent|Facebot/i.test(ua)) return true
+  if (a.toLowerCase().startsWith('2a03:2880')) return true
+  if (!/^\d+\.\d+\.\d+\.\d+$/.test(a)) return false
+  const n = ipNum(a)
+  return FAIXAS.some(([i, f]) => n >= i && n < f)
+}
+
 const ip = (req) => req.headers['cf-connecting-ip'] || req.headers['x-real-ip'] || req.socket.remoteAddress || ''
 
 // País do lead pelo IP (a Cloudflare manda CF-IPCountry); vai para a página antes de carregar
@@ -445,6 +464,7 @@ createServer(async (req, res) => {
     if (url.pathname === '/api/e' && req.method === 'POST') {
       const b = await lerCorpo(req)
       const url0 = String(b.url || '').slice(0, 500)
+      const robo = ehRoboMeta(req)
       for (const e of (Array.isArray(b.events) ? b.events : [b]).slice(0, 20)) {
         if (!EVENTOS.has(e.ev)) continue
         const sidE = String(e.sid || '').slice(0, 64)
@@ -457,6 +477,10 @@ createServer(async (req, res) => {
           country: COUNTRIES[e.country] ? e.country : '',
           fbclid: e.utm?.fbclid ? String(e.utm.fbclid).slice(0, 300) : '',
         })
+        if (robo) {
+          gravar(`robos-${hoje()}.jsonl`, { t: Date.now(), sid: sidE, ev: e.ev, ip: ip(req), ua: String(req.headers['user-agent'] || '').slice(0, 200), utm: limparUtm(e.utm) })
+          continue
+        }
         if (META_EVENTOS[e.ev] && e.props?.eid) {
           evento({ nome: META_EVENTOS[e.ev], id: String(e.props.eid).slice(0, 100), sid: sidE, url: url0, valor: e.props.value, moeda: e.props.currency })
         }
