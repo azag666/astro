@@ -561,9 +561,9 @@ createServer(async (req, res) => {
 async function conferirChave() {
   try {
     const me = await hottrack('/me')
-    const escopos = me.scopes || me.escopos || []
+    const escopos = me.key?.scopes || []
     const faltam = ['write:charges', 'read:sales'].filter((e) => !escopos.includes(e))
-    console.log(`Chave OK: ${me.name || me.key_name || ''} · conta ${me.seller_id ?? me.account?.id ?? ''} · escopos ${escopos.join(', ')}${faltam.length ? ` · FALTAM: ${faltam.join(', ')}` : ''}`)
+    console.log(`Chave OK: ${me.key?.prefix || ''} (${me.key?.environment || ''}) · conta ${me.seller?.id || ''} ${me.seller?.name || ''} · escopos ${escopos.join(', ')}${faltam.length ? ` · FALTAM: ${faltam.join(', ')}` : ''}`)
   } catch (e) {
     console.error(`CHAVE INVÁLIDA (${e.code}): ${e.message}. As cobranças vão falhar até corrigir HOTTRACK_API_KEY.`)
   }
