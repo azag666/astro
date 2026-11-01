@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ExclamationTriangleIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 import { useI18n, WALLETS } from '../../i18n'
@@ -12,8 +12,21 @@ const KEY = 'ceu-natal-pedido-perguntas'
 // então é só escolher o método e pagar (mesma tela de pagamento real do checkout).
 export default function QuickPay({ data, pack, offer = '', cta, onPaid }) {
   const { t, c, country, walletName, walletNote } = useI18n()
-  const wallets = c.wallets.filter((w) => htMethod(w, c.currency))
-  const [method, setMethod] = useState(wallets[0])
+  const [fora, setFora] = useState([])
+  const todos = c.wallets.filter((w) => htMethod(w, c.currency))
+  const wallets = todos.filter((w) => !fora.includes(w)).length ? todos.filter((w) => !fora.includes(w)) : todos
+  const [method, setMethod] = useState(todos[0])
+  useEffect(() => {
+    fetch(`/api/metodos?c=${country}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const f = d?.fora || []
+        setFora(f)
+        setMethod((m) => (f.includes(m) ? todos.find((w) => !f.includes(w)) || m : m))
+      })
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [country])
   const [order, setOrder] = useState(() => {
     try {
       const o = JSON.parse(sessionStorage.getItem(KEY) || 'null')
@@ -58,6 +71,11 @@ export default function QuickPay({ data, pack, offer = '', cta, onPaid }) {
       }
       setOrder(o)
     } catch (e) {
+      if (e.code === 'method_unavailable' || e.code === 'gateway_error') {
+        setFora((f) => [...f, method])
+        const outro = wallets.find((w) => w !== method)
+        if (outro) setMethod(outro)
+      }
       setError(t(e.code === 'rate_limited' ? 'checkout.pay.tooMany' : e.code === 'method_unavailable' ? 'checkout.pay.unavailable' : 'checkout.pay.error'))
     } finally {
       setBusy(false)

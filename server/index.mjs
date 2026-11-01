@@ -211,6 +211,19 @@ function podeCobrar(ip) {
   return true
 }
 
+// ---------- Métodos fora do ar ----------
+// Método que falhou por configuração (não liberado/conectado) ou erro do gateway fica fora por um tempo,
+// e o checkout já abre sem ele (GET /api/metodos).
+const foraDoAr = new Map()
+const chaveMetodo = (wallet, currency) => `${wallet}:${currency}`
+function tirarDoAr(wallet, currency, minutos) {
+  foraDoAr.set(chaveMetodo(wallet, currency), Date.now() + minutos * 60e3)
+}
+function estaForaDoAr(wallet, currency) {
+  const ate = foraDoAr.get(chaveMetodo(wallet, currency))
+  return !!ate && ate > Date.now()
+}
+
 // ---------- Rotas ----------
 
 async function criarPedido(req, corpo) {
@@ -222,6 +235,7 @@ async function criarPedido(req, corpo) {
   if (!c || !c.wallets.includes(wallet)) return [400, { error: 'invalid_method' }]
   const method = htMethod(wallet, c.currency)
   if (!method) return [400, { error: 'invalid_method' }]
+  if (estaForaDoAr(wallet, c.currency)) return [422, { error: 'method_unavailable' }]
   const valor = orderTotal(country, { product, offer, pack, bump: product === 'mapa' && !!bump, numBump: product === 'mapa' && !!numBump })
   if (!valor) return [400, { error: 'invalid_product' }]
 
@@ -278,6 +292,16 @@ async function criarPedido(req, corpo) {
     gravar(`eventos-${hoje()}.jsonl`, { t: Date.now(), sid: p.sid, ev: 'charge_error', country, focus: p.focus, utm: p.utm, props: { method: wallet, code: e.code } })
     console.error('cobranca', country, method, e.code, e.message)
     const indisponivel = ['gateway_not_connected', 'method_not_enabled_at_gateway', 'method_not_for_currency', 'gateway_not_configured', 'invalid_currency'].includes(e.code)
+    if (indisponivel) tirarDoAr(wallet, p.currency, 30)
+    else if (e.status >= 500 || e.code === 'gateway_error') {
+      const k = chaveMetodo(wallet, p.currency) + ':falhas'
+      const n = (foraDoAr.get(k) || 0) + 1
+      foraDoAr.set(k, n)
+      if (n >= 2) {
+        tirarDoAr(wallet, p.currency, 10)
+        foraDoAr.delete(k)
+      }
+    }
     return [indisponivel ? 422 : 502, { error: indisponivel ? 'method_unavailable' : 'gateway_error' }]
   }
 }
@@ -403,6 +427,12 @@ createServer(async (req, res) => {
       gravar('leads.jsonl', { t: new Date().toISOString(), sid: String(b.sid || '').slice(0, 64), country: b.country, email: String(b.email || '').slice(0, 160), phone: String(b.phone || '').slice(0, 30), name: String(b.name || '').slice(0, 120), focus: b.focus, consent: !!b.consent, utm: limparUtm(b.utm) })
       res.writeHead(204).end()
       return
+    }
+
+    if (url.pathname === '/api/metodos' && req.method === 'GET') {
+      const c = COUNTRIES[url.searchParams.get('c')]
+      if (!c) return json(res, 400, { error: 'country' })
+      return json(res, 200, { fora: c.wallets.filter((w) => estaForaDoAr(w, c.currency)) })
     }
 
     if (url.pathname === '/api/pedido' && req.method === 'POST') {

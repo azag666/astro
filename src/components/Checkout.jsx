@@ -45,6 +45,17 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
   const { t, money, c, country, walletName, walletNote } = useI18n()
   const [off, setOff] = useState([])
   const wallets = c.wallets.filter((w) => !off.includes(w))
+  useEffect(() => {
+    fetch(`/api/metodos?c=${country}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const fora = (d?.fora || []).filter((w) => c.wallets.includes(w))
+        if (!fora.length || fora.length >= c.wallets.length) return
+        setOff(fora)
+        setMethod((m) => (fora.includes(m) ? c.wallets.find((w) => !fora.includes(w)) : m))
+      })
+      .catch(() => {})
+  }, [country, c.wallets])
   const [method, setMethod] = useState(c.wallets[0])
   const [bump, setBump] = useState(false)
   const [numBump, setNumBump] = useState(false)
@@ -139,7 +150,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
       } catch (e) {
         setStage('form')
         const rest = wallets.filter((w) => w !== method)
-        if (e.code === 'method_unavailable' && rest.length) {
+        if ((e.code === 'method_unavailable' || e.code === 'gateway_error') && rest.length) {
           setOff((o) => [...o, method])
           setMethod(rest[0])
           setPayError(t('checkout.pay.unavailable'))
