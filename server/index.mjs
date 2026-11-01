@@ -1,6 +1,7 @@
 // Servidor do Céu Natal: entrega o site (dist/), cria cobranças na HotTrack,
 // confere o pagamento e grava cada passo do funil. Node 22, sem dependências.
 //
+// Meta: META_PIXEL_ID, META_CAPI_TOKEN, META_TEST_CODE (ver capi.mjs).
 // Variáveis: DESLIGAR_METODOS (ex.: whop), HOTTRACK_API_KEY (ht_live_ ou ht_test_; sem ela as cobranças são simuladas),
 // PAINEL_TOKEN (senha do /painel), PORT (padrão 8787), DATA_DIR (padrão ./data).
 import { createServer } from 'node:http'
@@ -10,6 +11,7 @@ import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { COUNTRIES, htMethod, orderTotal } from '../src/i18n/paises.js'
 import { painelHtml, resumoDoFunil } from './painel.mjs'
+import { capiLigada, evento, lembrar, pixelId } from './capi.mjs'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const DIST = join(ROOT, 'dist')
@@ -212,6 +214,8 @@ function marcarPago(p, paidAt) {
   p.status = 'paid'
   p.paidAt = paidAt || new Date().toISOString()
   salvarPedido(p)
+  lembrar(p.sid, { ...(p.meta || {}), email: p.customer?.email, phone: p.customer?.phone, name: p.customer?.name, country: p.country })
+  evento({ nome: 'Purchase', id: `purchase-${p.id}`, sid: p.sid, valor: p.total, moeda: p.currency, pedido: p.id })
   gravar(`eventos-${hoje()}.jsonl`, { t: Date.now(), sid: p.sid, ev: 'paid', country: p.country, focus: p.focus, utm: p.utm, props: { method: p.wallet, total: p.total, currency: p.currency, product: p.product || 'mapa', offer: p.offer || '', pack: p.pack || 0, bump: p.bump, numBump: p.numBump } })
 }
 
@@ -289,6 +293,13 @@ async function criarPedido(req, corpo) {
     customer: { name: String(customer.name || '').slice(0, 120), email: String(customer.email || '').slice(0, 160), phone: String(customer.phone || '').slice(0, 30) },
     status: 'pending',
     createdAt: new Date().toISOString(),
+    meta: {
+      ip: ip(req),
+      ua: String(req.headers['user-agent'] || '').slice(0, 300),
+      fbp: String(corpo.fbp || '').slice(0, 100) || undefined,
+      fbc: String(corpo.fbc || '').slice(0, 300) || undefined,
+      fbclid: utm.fbclid ? String(utm.fbclid).slice(0, 300) : undefined,
+    },
   }
 
   try {
@@ -309,6 +320,8 @@ async function criarPedido(req, corpo) {
     p.payment = ch.payment || { method, kind: ch.checkout_url ? 'redirect' : ch.clabe ? 'bank_transfer' : 'copy_paste', instructions: { copy_paste: ch.copy_paste, clabe: ch.clabe, checkout_url: ch.checkout_url } }
     p.expiresAt = ch.expires_at || p.payment.expires_at || null
     salvarPedido(p)
+    lembrar(p.sid, { ...p.meta, email: p.customer.email, phone: p.customer.phone, name: p.customer.name, country })
+    evento({ nome: 'AddPaymentInfo', id: `api-${p.id}`, sid: p.sid, valor: p.total, moeda: p.currency })
     gravar(`eventos-${hoje()}.jsonl`, { t: Date.now(), sid: p.sid, ev: 'charge_created', country, focus: p.focus, utm: p.utm, props: { method: wallet, total: p.total, product, offer, pack } })
     return [200, publico(p)]
   } catch (e) {
@@ -390,7 +403,7 @@ let indexHtml = null
 function paginaInicial(req, res) {
   if (!indexHtml) indexHtml = readFileSync(join(DIST, 'index.html'), 'utf8')
   const pais = PAIS_POR_IP[String(req.headers['cf-ipcountry'] || '').toUpperCase()] || ''
-  const html = indexHtml.replace('<head>', `<head><script>window.__PAIS_IP=${JSON.stringify(pais)}</script>`)
+  const html = indexHtml.replace('<head>', `<head><script>window.__PAIS_IP=${JSON.stringify(pais)};window.__PIXEL=${JSON.stringify(pixelId())}</script>`)
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' })
   res.end(html)
 }
@@ -422,6 +435,7 @@ function lerCorpo(req, limite = 16 * 1024) {
   })
 }
 
+const META_EVENTOS = { view: 'PageView', quiz_start: 'ViewContent', signup: 'Lead', checkout_view: 'InitiateCheckout' }
 const EVENTOS = new Set(['view', 'quiz_start', 'quiz_step', 'signup', 'login', 'report_view', 'offer_view', 'buy_click', 'checkout_view', 'method_select', 'bump_toggle', 'pay_click', 'code_copy', 'redirect_open', 'paid_view', 'back_offer_view', 'back_offer_accept', 'upsell_accept', 'upsell_decline', 'pro_open', 'pack_select', 'review_open'])
 
 createServer(async (req, res) => {
@@ -429,8 +443,22 @@ createServer(async (req, res) => {
   try {
     if (url.pathname === '/api/e' && req.method === 'POST') {
       const b = await lerCorpo(req)
+      const url0 = String(b.url || '').slice(0, 500)
       for (const e of (Array.isArray(b.events) ? b.events : [b]).slice(0, 20)) {
         if (!EVENTOS.has(e.ev)) continue
+        const sidE = String(e.sid || '').slice(0, 64)
+        lembrar(sidE, {
+          ip: ip(req),
+          ua: String(req.headers['user-agent'] || '').slice(0, 300),
+          fbp: String(b.fbp || '').slice(0, 100),
+          fbc: String(b.fbc || '').slice(0, 300),
+          url: url0,
+          country: COUNTRIES[e.country] ? e.country : '',
+          fbclid: e.utm?.fbclid ? String(e.utm.fbclid).slice(0, 300) : '',
+        })
+        if (META_EVENTOS[e.ev] && e.props?.eid) {
+          evento({ nome: META_EVENTOS[e.ev], id: String(e.props.eid).slice(0, 100), sid: sidE, url: url0, valor: e.props.value, moeda: e.props.currency })
+        }
         gravar(`eventos-${hoje()}.jsonl`, {
           t: Date.now(),
           sid: String(e.sid || '').slice(0, 64),
@@ -447,6 +475,7 @@ createServer(async (req, res) => {
 
     if (url.pathname === '/api/lead' && req.method === 'POST') {
       const b = await lerCorpo(req)
+      lembrar(String(b.sid || '').slice(0, 64), { email: String(b.email || ''), phone: String(b.phone || ''), name: String(b.name || ''), city: String(b.city || '').slice(0, 80), country: COUNTRIES[b.country] ? b.country : '', ip: ip(req), ua: String(req.headers['user-agent'] || '').slice(0, 300) })
       gravar('leads.jsonl', { t: new Date().toISOString(), sid: String(b.sid || '').slice(0, 64), country: b.country, email: String(b.email || '').slice(0, 160), phone: String(b.phone || '').slice(0, 30), name: String(b.name || '').slice(0, 120), focus: b.focus, consent: !!b.consent, utm: limparUtm(b.utm) })
       res.writeHead(204).end()
       return
@@ -656,6 +685,7 @@ createServer(async (req, res) => {
 }).listen(PORT, '127.0.0.1', () => {
   console.log(`Céu Natal em http://127.0.0.1:${PORT} · cobranças ${KEY ? (SIMULADO ? 'de teste (ht_test_)' : 'REAIS') : 'simuladas (sem chave)'}`)
   if (KEY) conferirChave()
+  console.log(`Meta: pixel ${pixelId() || '(sem META_PIXEL_ID)'} · CAPI ${capiLigada ? 'ligada' : 'desligada (falta META_CAPI_TOKEN)'}${process.env.META_TEST_CODE ? ' · MODO TESTE ' + process.env.META_TEST_CODE : ''}`)
 })
 
 // Confere a chave na HotTrack ao ligar: nome, escopos e se falta algum que o site usa

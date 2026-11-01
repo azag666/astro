@@ -25,6 +25,7 @@ import { isEmail, maskCard, maskExpiry, maskPhone } from '../lib/format'
 import { useI18n, WALLETS } from '../i18n'
 import { htMethod } from '../i18n/paises.js'
 import { sid, track, utm } from '../lib/track'
+import { fbCookies, fbEvent } from '../lib/pixel'
 import QRCode from 'qrcode'
 import { DateSelect, TimeSelect } from './DateSelect'
 import ProAvatar from './pros/ProAvatar'
@@ -121,6 +122,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sid,
+            ...fbCookies(),
             country,
             wallet: method,
             offer,
@@ -145,6 +147,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null,
         if (!r.ok) throw Object.assign(new Error(body.error), { code: body.error })
         const o = { ...body, country, bump, numBump, askBump, profileId: buyFor?.id || null }
         sessionStorage.setItem(ORDER_KEY, JSON.stringify(o))
+        fbEvent('AddPaymentInfo', `api-${o.id}`, { value: o.total, currency: o.currency })
         const link = o.payment?.kind === 'redirect' && o.payment.instructions?.checkout_url
         if (link && !o.simulado) {
           track('redirect_open', { method })

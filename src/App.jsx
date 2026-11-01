@@ -85,7 +85,11 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (SCREEN_EVENTS[screen]) track(SCREEN_EVENTS[screen])
+    if (screen === 'checkout') {
+      const c = COUNTRIES[country]
+      track('checkout_view', { value: offer === 'back' ? c.back : c.price, currency: c.currency })
+    } else if (SCREEN_EVENTS[screen]) track(SCREEN_EVENTS[screen])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen])
 
   useEffect(() => {

@@ -4,6 +4,7 @@ import { ExclamationTriangleIcon, LockClosedIcon } from '@heroicons/react/24/out
 import { useI18n, WALLETS } from '../../i18n'
 import { htMethod } from '../../i18n/paises.js'
 import { sid, track, utm } from '../../lib/track'
+import { fbCookies, fbEvent } from '../../lib/pixel'
 import { LivePending, WalletTab } from '../Checkout'
 
 const KEY = 'ceu-natal-pedido-perguntas'
@@ -49,6 +50,7 @@ export default function QuickPay({ data, pack, offer = '', cta, onPaid }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sid,
+          ...fbCookies(),
           country,
           wallet: method,
           product: 'perguntas',
@@ -63,6 +65,7 @@ export default function QuickPay({ data, pack, offer = '', cta, onPaid }) {
       if (!r.ok) throw Object.assign(new Error(body.error), { code: body.error })
       const o = { ...body, country }
       sessionStorage.setItem(KEY, JSON.stringify(o))
+      fbEvent('AddPaymentInfo', `api-${o.id}`, { value: o.total, currency: o.currency })
       const link = o.payment?.kind === 'redirect' && o.payment.instructions?.checkout_url
       if (link && !o.simulado) {
         track('redirect_open', { method })
