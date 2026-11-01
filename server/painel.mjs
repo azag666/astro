@@ -30,6 +30,8 @@ export function resumoDoFunil(dir, pedidos, { de, ate, country, campaign } = {})
   const metodos = {}
   const erros = {}
   const receita = {}
+  const ofertas = {}
+  const OFERTAS = { back_offer_view: 'Volta: viu', back_offer_accept: 'Volta: aceitou', upsell_accept: 'Upsell/downsell: aceitou', upsell_decline: 'Upsell/downsell: recusou', pro_open: 'Profissionais: abriu perfil', questions_sent: 'Perguntas enviadas' }
 
   for (const dia of lista) {
     const arq = join(dir, `eventos-${dia}.jsonl`)
@@ -47,7 +49,18 @@ export function resumoDoFunil(dir, pedidos, { de, ate, country, campaign } = {})
       if (campaign && camp !== campaign) continue
       if (!e.sid) continue
 
-      if (porPasso[e.ev]) {
+      const extra = (e.ev === 'charge_created' || e.ev === 'paid') && e.props?.product === 'perguntas'
+      if (extra || (e.ev === 'paid' && e.props?.offer === 'back')) {
+        const nome = e.props?.product === 'perguntas' ? `Pacote ${e.props.pack} pergunta(s)${e.props.offer === 'up' ? ' (upsell)' : e.props.offer === 'down' ? ' (downsell)' : ''}` : 'Mapa com desconto da volta'
+        const o = (ofertas[nome] ||= { cobrancas: 0, pagas: 0 })
+        if (e.ev === 'paid') o.pagas++
+        else o.cobrancas++
+      }
+      if (OFERTAS[e.ev]) {
+        const o = (ofertas[OFERTAS[e.ev]] ||= { pessoas: new Set() })
+        o.pessoas.add(e.sid)
+      }
+      if (porPasso[e.ev] && !extra) {
         porPasso[e.ev].add(e.sid)
         const pais = e.country || '?'
         ;(porPais[pais] ||= Object.fromEntries(PASSOS.map(([k]) => [k, new Set()])))[e.ev].add(e.sid)
@@ -74,6 +87,7 @@ export function resumoDoFunil(dir, pedidos, { de, ate, country, campaign } = {})
     metodos,
     erros,
     receita,
+    ofertas: Object.fromEntries(Object.entries(ofertas).map(([k, v]) => [k, v.pessoas ? { pessoas: v.pessoas.size } : v])),
     pedidosAbertos: [...pedidos.values()].filter((p) => p.status === 'pending').length,
   }
 }
@@ -153,6 +167,11 @@ ${tabelaFunil('Por país', r.porPais)}
 ${tabelaFunil('Por campanha (utm_campaign)', r.porCampanha)}
 <h2>Onde o quiz perde gente</h2><table><tr><th>Pergunta</th><th>Pessoas</th></tr>${quiz || '<tr><td colspan="2">Sem dados</td></tr>'}</table>
 <h2>Métodos de pagamento</h2><table><tr><th>País/método</th><th>Cobranças</th><th>Pagas</th><th>Taxa</th></tr>${metodos || '<tr><td colspan="4">Sem dados</td></tr>'}</table>
+<h2>Volta, upsell e pacotes</h2><table><tr><th>Oferta</th><th>Pessoas</th><th>Cobranças</th><th>Pagas</th></tr>${
+    Object.entries(r.ofertas)
+      .map(([nome, v]) => `<tr><td>${esc(nome)}</td><td>${v.pessoas ?? ''}</td><td>${v.cobrancas ?? ''}</td><td>${v.pagas ?? ''}</td></tr>`)
+      .join('') || '<tr><td colspan="4">Sem dados</td></tr>'
+  }</table>
 ${blocoPerguntas(perguntas, k)}
 ${erros ? `<h2>Falhas ao gerar cobrança</h2><table><tr><th>País/método: erro</th><th>Vezes</th></tr>${erros}</table>` : ''}
 </main></body></html>`

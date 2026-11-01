@@ -40,7 +40,8 @@ function savedOrder(country) {
 }
 
 // buyFor: perfil de outra pessoa (parceiro, filho...) para quem é o mapa; null = o próprio comprador
-export default function Checkout({ data, setData, onBack, onPaid, buyFor = null }) {
+// offer: '' = preço normal, 'back' = desconto da volta (back redirect)
+export default function Checkout({ data, setData, onBack, onPaid, buyFor = null, offer = '' }) {
   const { t, money, c, country, walletName, walletNote } = useI18n()
   const [off, setOff] = useState([])
   const wallets = c.wallets.filter((w) => !off.includes(w))
@@ -61,7 +62,8 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null 
   const fromQuiz = !!subject.birthDate && !!subject.place
   const kind = WALLETS[method].kind
 
-  const total = c.price + (bump ? c.bump : 0) + (numBump ? c.numBump : 0)
+  const base = offer === 'back' ? c.back : c.price
+  const total = base + (bump ? c.bump : 0) + (numBump ? c.numBump : 0)
   const signIdx = quickSunSign(subject.birthDate)
   const phoneDigits = data.phone.replace(/\D/g, '')
   const contactOk = data.name.trim().length >= 2 && isEmail(data.email) && phoneDigits.length >= c.phone.min
@@ -104,6 +106,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null 
             sid,
             country,
             wallet: method,
+            offer,
             bump,
             numBump,
             focus: data.focus,
@@ -391,7 +394,7 @@ export default function Checkout({ data, setData, onBack, onPaid, buyFor = null 
                   ))}
                 </ul>
                 <div className="mt-6 space-y-2 border-t border-white/10 pt-5 text-sm">
-                  <Row label={t('checkout.lineMain')} value={<><s className="mr-2 text-white/35">{money(c.from)}</s>{money(c.price)}</>} />
+                  <Row label={t('checkout.lineMain')} value={<><s className="mr-2 text-white/35">{money(c.from)}</s>{money(base)}</>} />
                   <AnimatePresence>
                     {bump && (
                       <motion.div key="b" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
@@ -448,7 +451,7 @@ function Input({ icon: Icon, error, className = '', ...props }) {
   )
 }
 
-function WalletTab({ active, onClick, color, label, note }) {
+export function WalletTab({ active, onClick, color, label, note }) {
   return (
     <button
       type="button"
@@ -615,7 +618,7 @@ function Pending({ kind, method, total, email, phone, bank, onPaid, onBack }) {
 }
 
 // Tela de pagamento real: mostra o que a HotTrack devolveu e confirma sozinha quando o pagamento cai
-function LivePending({ order, holder, onPaid, onBack }) {
+export function LivePending({ order, holder, onPaid, onBack }) {
   const { t, money, walletName, c } = useI18n()
   const [o, setO] = useState(order)
   const [copied, setCopied] = useState('')

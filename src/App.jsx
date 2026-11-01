@@ -7,6 +7,9 @@ import Analyzing from './components/Analyzing'
 import SalesPage from './components/SalesPage'
 import Checkout from './components/Checkout'
 import Success from './components/Success'
+import Volta from './components/Volta'
+import PosCompra from './components/PosCompra'
+import ProsArea from './components/pros/ProsArea'
 import Login from './components/Login'
 import { addOrder, currentAccount, login as loginAccount, logout, saveAccount } from './lib/account'
 import { COUNTRIES, detectCountry, I18nProvider } from './i18n'
@@ -32,7 +35,7 @@ const EMPTY = {
   consent: false,
 }
 
-const SCREENS = ['intro', 'login', 'quiz', 'analyzing', 'offer', 'checkout', 'success']
+const SCREENS = ['intro', 'login', 'quiz', 'analyzing', 'offer', 'checkout', 'success', 'volta', 'pros']
 
 // Campanhas: ?f=amor|dinheiro|carreira|espiritual já define a dor do lead
 const FOCUSES = ['amor', 'dinheiro', 'carreira', 'espiritual']
@@ -61,6 +64,8 @@ export default function App() {
   const [account, setAccount] = useState(currentAccount)
   // Perfil para quem o mapa está sendo comprado (null = o próprio comprador)
   const [buyFor, setBuyFor] = useState(null)
+  // '' = preço normal; 'back' = desconto oferecido a quem tentou sair da oferta
+  const [offer, setOffer] = useState(() => sessionStorage.getItem('ceu-natal-oferta') || '')
 
   useEffect(() => {
     sessionStorage.setItem('ceu-natal', JSON.stringify(data))
@@ -96,6 +101,14 @@ export default function App() {
   }, [])
 
   const toOffer = useCallback(() => go('offer'), [go])
+
+  // Back redirect: na primeira vez na oferta, o "voltar" do navegador cai na tela de desconto
+  useEffect(() => {
+    if (screen !== 'offer' || offer || sessionStorage.getItem('ceu-natal-volta')) return
+    sessionStorage.setItem('ceu-natal-volta', '1')
+    history.replaceState(null, '', '#/volta')
+    history.pushState(null, '', '#/offer')
+  }, [screen, offer])
 
   return (
     <I18nProvider country={country} gender={data.gender}>
@@ -148,6 +161,7 @@ export default function App() {
           {screen === 'checkout' && (
             <Checkout
               key={country}
+              offer={offer}
               buyFor={buyFor}
               data={data}
               setData={setData}
@@ -160,7 +174,24 @@ export default function App() {
               }}
             />
           )}
-          {screen === 'success' && <Success data={data} order={order || { total: COUNTRIES[country].price }} />}
+          {screen === 'success' && (
+            <PosCompra data={data} profiles={account?.profiles || []}>
+              <Success data={data} order={order || { total: COUNTRIES[country].price }} />
+            </PosCompra>
+          )}
+          {screen === 'volta' && (
+            <Volta
+              name={data.name}
+              onAccept={() => {
+                sessionStorage.setItem('ceu-natal-oferta', 'back')
+                setOffer('back')
+                setBuyFor(null)
+                go('checkout')
+              }}
+              onDecline={() => go('intro')}
+            />
+          )}
+          {screen === 'pros' && <ProsArea data={data} profiles={account?.profiles || []} />}
         </motion.main>
       </AnimatePresence>
     </I18nProvider>

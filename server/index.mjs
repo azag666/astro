@@ -327,7 +327,7 @@ function lerCorpo(req, limite = 16 * 1024) {
   })
 }
 
-const EVENTOS = new Set(['view', 'quiz_start', 'quiz_step', 'signup', 'login', 'report_view', 'offer_view', 'buy_click', 'checkout_view', 'method_select', 'bump_toggle', 'pay_click', 'code_copy', 'redirect_open', 'paid_view'])
+const EVENTOS = new Set(['view', 'quiz_start', 'quiz_step', 'signup', 'login', 'report_view', 'offer_view', 'buy_click', 'checkout_view', 'method_select', 'bump_toggle', 'pay_click', 'code_copy', 'redirect_open', 'paid_view', 'back_offer_view', 'back_offer_accept', 'upsell_accept', 'upsell_decline', 'pro_open', 'pack_select'])
 
 createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x')

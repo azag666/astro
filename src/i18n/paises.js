@@ -22,7 +22,7 @@ export const COUNTRIES = {
   br: {
     name: 'Brasil', flag: 'BR', lang: 'pt', locale: 'pt-BR', currency: 'BRL', decimals: 2,
     price: 27.9, numBump: 19.9, numBumpFrom: 57.9, from: 97.9, bump: 17.9, bumpFrom: 67.9, bonus: [47, 37], installments: 3,
-    back: 19.9, ask: { 1: 14.9, 3: 37, 5: 54.9 }, askUp: 29.9, askDown: 9.9,
+    back: 19.9, ask: { 1: 19.9, 3: 47.9, 5: 69.9 }, askUp: 37, askDown: 14.9,
     phone: { code: '+55', min: 10, max: 11, placeholder: '(11) 99999-9999' },
     wallets: ['pix', 'whop'],
     banks: [],
@@ -30,7 +30,7 @@ export const COUNTRIES = {
   mx: {
     name: 'México', flag: 'MX', lang: 'es', locale: 'es-MX', currency: 'MXN', decimals: 0,
     price: 149, numBump: 99, numBumpFrom: 279, from: 499, bump: 89, bumpFrom: 299, bonus: [249, 199], installments: 3,
-    back: 99, ask: { 1: 79, 3: 199, 5: 299 }, askUp: 149, askDown: 49,
+    back: 99, ask: { 1: 99, 3: 229, 5: 329 }, askUp: 179, askDown: 79,
     phone: { code: '+52', min: 10, max: 10, placeholder: '55 1234 5678' },
     wallets: ['spei', 'oxxo', 'whop'],
     banks: [],
@@ -38,7 +38,7 @@ export const COUNTRIES = {
   co: {
     name: 'Colombia', flag: 'CO', lang: 'es', locale: 'es-CO', currency: 'COP', decimals: 0,
     price: 34900, numBump: 24900, numBumpFrom: 59900, from: 119900, bump: 19900, bumpFrom: 69900, bonus: [59900, 49900], installments: 3,
-    back: 24900, ask: { 1: 19900, 3: 49900, 5: 74900 }, askUp: 39900, askDown: 12900,
+    back: 24900, ask: { 1: 24900, 3: 54900, 5: 79900 }, askUp: 44900, askDown: 19900,
     phone: { code: '+57', min: 10, max: 10, placeholder: '300 123 4567' },
     wallets: ['nequi', 'breb', 'whop'],
     banks: [],
@@ -46,7 +46,7 @@ export const COUNTRIES = {
   ar: {
     name: 'Argentina', flag: 'AR', lang: 'es', variant: 'ar', locale: 'es-AR', currency: 'ARS', decimals: 0,
     price: 14900, numBump: 9900, numBumpFrom: 24900, from: 49900, bump: 8900, bumpFrom: 29900, bonus: [24900, 19900], installments: 3,
-    back: 9900, ask: { 1: 7900, 3: 19900, 5: 29900 }, askUp: 14900, askDown: 4900,
+    back: 9900, ask: { 1: 9900, 3: 24900, 5: 34900 }, askUp: 19900, askDown: 7900,
     phone: { code: '+54', min: 10, max: 11, placeholder: '11 1234 5678' },
     wallets: ['cvu', 'whop'],
     banks: [],
@@ -54,7 +54,7 @@ export const COUNTRIES = {
   cn: {
     name: '中国', flag: 'CN', lang: 'zh', locale: 'zh-CN', currency: 'CNY', decimals: 0,
     price: 39, numBump: 25, numBumpFrom: 59, from: 129, bump: 19, bumpFrom: 68, bonus: [68, 58], installments: 3,
-    back: 29, ask: { 1: 19, 3: 49, 5: 79 }, askUp: 39, askDown: 12,
+    back: 29, ask: { 1: 25, 3: 59, 5: 89 }, askUp: 45, askDown: 19,
     phone: { code: '+86', min: 11, max: 11, placeholder: '138 0013 8000' },
     wallets: ['alipay', 'wechat', 'unionpay', 'card'],
     banks: [],
