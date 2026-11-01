@@ -4,8 +4,10 @@ import { execSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync, chmodSync } from 'node:fs'
 
 const key = execSync('pbpaste').toString().trim()
-if (!/^ht_(live|test)_[A-Za-z0-9_-]{8,}$/.test(key)) {
-  console.error('A área de transferência não contém uma chave HotTrack válida (ht_live_... ou ht_test_...).')
+// Formatos aceitos: ht_live_… / ht_test_… ou UUID (chave gerada no painel da conta)
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+if (!/^ht_(live|test)_[A-Za-z0-9_-]{8,}$/.test(key) && !UUID.test(key)) {
+  console.error('A área de transferência não contém uma chave HotTrack válida (ht_live_…, ht_test_… ou UUID).')
   process.exit(1)
 }
 
@@ -15,6 +17,6 @@ lines.push(`HOTTRACK_API_KEY=${key}`)
 writeFileSync(file, lines.join('\n') + '\n')
 chmodSync(file, 0o600)
 
-const modo = key.startsWith('ht_live_') ? 'PRODUÇÃO (cobranças reais)' : 'TESTE (cobranças simuladas)'
+const modo = key.startsWith('ht_test_') ? 'TESTE (cobranças simuladas)' : 'PRODUÇÃO (cobranças reais)'
 console.log(`Chave gravada no .env: ${key.slice(0, 8)}…${key.slice(-4)} — modo ${modo}.`)
 console.log('Reinicie o servidor (npm run server) para usar a chave.')
